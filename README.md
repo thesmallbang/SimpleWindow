@@ -32,6 +32,14 @@ Step 2: Add a view
         Name = 'Main'
     }
 
+  --   view.Sizes =  {
+  --              {Name = 'xs', To = 0},
+  --              {Name = 'sm', To = 250},
+  --              {Name = 'md', To = 400},
+  --              {Name = 'lg', To = 600},
+  --              {Name = 'xl', To = 800}
+  --         }
+
     -- OnUpdate will be called after the UpdateInterval has passed or a refresh is being forced
     view.OnUpdate = function(v)
         -- we need a container to put our content in
