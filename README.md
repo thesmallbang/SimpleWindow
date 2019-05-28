@@ -4,6 +4,15 @@ A lua library for creating "responsive" windows in mushclient
 *This is still very experimental and I am still really working out I think it should work.*
 
 
+Sample Pics
+
+![sample1](sample1.png "Sample 1")
+![sample2](sample2.png "Sample 2")
+![sample3](sample3.png "Sample 3")
+
+Resizing
+
+![resize](resizesample.png "Resizing")
 
 ####
 ##### Creating the simplest window
