@@ -170,29 +170,29 @@ swindow.CreateWindow = function(config, theme)
         view.Sizes =
             options.Sizes or
             {
-                {Name = 'xs', To = 0},
-                {Name = 'sm', To = 250},
-                {Name = 'md', To = 400},
-                {Name = 'lg', To = 600},
-                {Name = 'xl', To = 800}
+                {Name = 'xs', From = 0},
+                {Name = 'sm', From = 100},
+                {Name = 'md', From = 200},
+                {Name = 'lg', From = 350},
+                {Name = 'xl', From = 500}
             }
 
         view.QuerySize = function()
-            local size = {To = 0}
+            local size = {From = -1}
+            local width = window.Config.Width
+            assert(view.Sizes ~= nil, 'No sizes are configured in the view')
 
             for _, s in ipairs(view.Sizes) do
-                if (s.To > size.To and window.Config.Width > size.To and window.Config.Width <= s.To) then
+                if (size.From < s.From and s.From <= width) then
                     size = s
                 end
             end
             if (size.Name == nil) then
-                size = view.Sizes[#view.Sizes] -- take the last one
+                size = view.Sizes[1] -- take the first
             end
 
-            if (size.Name == nil) then
-                assert('responsive query sizes are not configured (view.Sizes)')
-                return
-            end
+            assert(size.Name ~= nil, 'responsive query sizes are not configured (view.Sizes)')
+
             return size
         end
 
@@ -282,7 +282,10 @@ swindow.CreateWindow = function(config, theme)
                     -- auto go to next row
                     if (container.Style == swindow.ContainerStyles.Column) then
                         cursorInContainerBox.Y = cursorInContainerBox.Y + (contentBox.Bottom - contentBox.Top)
-                        containerheight = cursorInContainerBox.Y + contentheight
+
+                        if (containerheight < cursorInContainerBox.Y + contentheight) then
+                            containerheight = cursorInContainerBox.Y + contentheight
+                        end
                         cursorInContainerBox.X = 0
                     end
 
@@ -290,17 +293,24 @@ swindow.CreateWindow = function(config, theme)
                         if (cursorInContainerBox.X >= (containerBox.Right - containerBox.Left)) then
                             cursorInContainerBox.X = 0
                             cursorInContainerBox.Y = cursorInContainerBox.Y + (contentBox.Bottom - contentBox.Top)
-                            containerheight = cursorInContainerBox.Y + contentheight
+                            if
+                                (container.Content[icontent + 1] == nil and
+                                    containerheight < cursorInContainerBox.Y + contentheight)
+                             then
+                                containerheight = cursorInContainerBox.Y
+                            end
                         else
                             local nextContent = container.Content[icontent + 1]
                             if (nextContent ~= nil) then
                                 local sizePercent = nextContent.GetSizePercent(size.Name) or 1
                                 local cw = ((containerBox.Right - containerBox.Left) / 100) * sizePercent
-                                if ((cursorInContainerBox.X + cw) > viewBox.Right - viewBox.Left) then
+                                if ((cursorInContainerBox.X + cw) >= viewBox.Right - viewBox.Left) then
                                     cursorInContainerBox.X = 0
                                     cursorInContainerBox.Y =
                                         cursorInContainerBox.Y + (contentBox.Bottom - contentBox.Top)
-                                    containerheight = cursorInContainerBox.Y + contentheight
+                                    if (containerheight < cursorInContainerBox.Y + contentheight) then
+                                        containerheight = cursorInContainerBox.Y + contentheight
+                                    end
                                 end
                             end
                         end
@@ -312,7 +322,10 @@ swindow.CreateWindow = function(config, theme)
                         end
                     end
 
-                    if (containerheight < cursorInContainerBox.Y + contentheight) then
+                    if
+                        (container.Content[icontent + 1] ~= nil and
+                            containerheight < cursorInContainerBox.Y + contentheight)
+                     then
                         containerheight = cursorInContainerBox.Y + contentheight
                     end
                 end
@@ -330,9 +343,15 @@ swindow.CreateWindow = function(config, theme)
                     -- check the next container and see if its too large
                     local nextContainer = view.Containers[ic + 1]
                     if (nextContainer ~= nil) then
-                        local sizePercent = nextContainer.GetSizePercent(size.Name) or 1
-                        local containerwidth = ((viewBox.Right - viewBox.Left) / 100) * sizePercent
-                        if ((cursorInViewBox.X + containerwidth) > viewBox.Right - viewBox.Left) then
+                        local sp = nextContainer.GetSizePercent(size.Name) or 1
+                        local ncwidth = ((viewBox.Right - viewBox.Left) / 100) * sp
+
+                        local p1 = (tonumber(cursorInViewBox.X + containerwidth)) - 1
+                        -- so for some reason lua was passing the check 465 > 465 = true ...
+                        -- i can't seem to figure out why so for now just subtracting one to force it to still match how i want
+                        -- though i'm sure there will be some pixel perfect bug added
+                        local p2 = (tonumber(viewBox.Right - viewBox.Left))
+                        if (p1 > p2) then
                             cursorInViewBox.X = 0
                             cursorInViewBox.Y = cursorInViewBox.Y + containerheight
                             containerheight = 0
@@ -407,9 +426,9 @@ swindow.CreateWindow = function(config, theme)
                         {
                             {Name = 'xs', Percent = 100},
                             {Name = 'sm', Percent = 100},
-                            {Name = 'md', Percent = 50},
-                            {Name = 'lg', Percent = 50},
-                            {Name = 'xl', Percent = 25}
+                            {Name = 'md', Percent = 100},
+                            {Name = 'lg', Percent = 100},
+                            {Name = 'xl', Percent = 100}
                         })
                 content.GetSizePercent = function(name)
                     local potential = nil
