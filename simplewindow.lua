@@ -133,7 +133,7 @@ swindow.CreateWindow = function(config, theme)
 
         local view = window.__state.views[window.__state.viewIndex]
 
-        if (window.__state.lastDraw > (os.time() - 3)) then
+        if (window.__state.lastDraw > (os.time() - window.Config.UpdateInterval)) then
             if (view ~= nil) then
                 view.Containers = nil
             end
@@ -170,7 +170,7 @@ swindow.CreateWindow = function(config, theme)
         view.Sizes =
             options.Sizes or
             {
-                {Name = 'xs', To = 100},
+                {Name = 'xs', To = 0},
                 {Name = 'sm', To = 250},
                 {Name = 'md', To = 400},
                 {Name = 'lg', To = 600},
@@ -253,7 +253,6 @@ swindow.CreateWindow = function(config, theme)
 
                 local cursorInContainerBox = {X = 0, Y = 0}
 
-                local allcontentheight = 0
                 local rowCompleted = false
                 for _, content in pairs(container.Content) do
                     local contentBox = {
@@ -273,48 +272,60 @@ swindow.CreateWindow = function(config, theme)
                             Bounds = contentBox,
                             TextStyle = content.TextStyle,
                             FontColor = content.FontColor,
-                            BackColor = content.BackColor
+                            BackColor = content.BackColor,
+                            Alignment = {X = content.Alignment}
                         }
                     end
 
-                    cursorInContainerBox.X = cursorInContainerBox.X + contentwidth
+                    cursorInContainerBox.X = (cursorInContainerBox.X + (contentBox.Right - contentBox.Left))
 
                     -- auto go to next row
                     if (container.Style == swindow.ContainerStyles.Column) then
                         cursorInContainerBox.Y = cursorInContainerBox.Y + (contentBox.Bottom - contentBox.Top)
+                        containerheight = cursorInContainerBox.Y + contentheight
                         cursorInContainerBox.X = 0
-                        allcontentheight = allcontentheight + contentheight
                     end
 
                     if (container.Style == swindow.ContainerStyles.RowWrap) then
                         if (cursorInContainerBox.X >= (containerBox.Right - containerBox.Left)) then
                             cursorInContainerBox.X = 0
-                            cursorInContainerBox.Y = cursorInContainerBox.Y + contentheight
-                            allcontentheight = allcontentheight + contentheight
+                            cursorInContainerBox.Y = cursorInContainerBox.Y + (contentBox.Bottom - contentBox.Top)
+                            containerheight = cursorInContainerBox.Y + contentheight
                         end
                     end
 
                     if (container.Style == swindow.ContainerStyles.Row) then
-                        allcontentheight = contentheight
-                        if (cursorInContainerBox.X + 1 >= (containerBox.Right - containerBox.Left)) then
+                        if (cursorInContainerBox.X >= (containerBox.Right - containerBox.Left)) then
                             rowCompleted = true
                         end
                     end
+
+                    if (containerheight < cursorInContainerBox.Y + contentheight) then
+                        containerheight = cursorInContainerBox.Y + contentheight
+                    end
                 end
 
-                if (allcontentheight > containerheight) then
-                    containerheight = allcontentheight
-                end
                 if (container.Height ~= nil) then
                     containerheight = container.Height
                 end
 
                 cursorInViewBox.X = cursorInViewBox.X + containerwidth
-
-                if (cursorInViewBox.X + 1 >= (viewBox.Right - viewBox.Left)) then
+                if (cursorInViewBox.X >= (viewBox.Right - viewBox.Left)) then
                     cursorInViewBox.X = 0
                     cursorInViewBox.Y = cursorInViewBox.Y + containerheight
                     containerheight = 0
+                else
+                    -- check the next container and see if its too large
+                    local nextContainer = view.Containers[ic + 1]
+                    if (nextContainer ~= nil) then
+                        local sizePercent = nextContainer.GetSizePercent(size.Name) or 1
+                        local containerwidth = ((viewBox.Right - viewBox.Left) / 100) * sizePercent
+                        if ((cursorInViewBox.X + containerwidth) > viewBox.Right - viewBox.Left) then
+                            cursorInViewBox.X = 0
+                            cursorInViewBox.Y = cursorInViewBox.Y + containerheight
+                            containerheight = 0
+                        end
+                    end
                 end
             end
         end
@@ -402,8 +413,8 @@ swindow.CreateWindow = function(config, theme)
                 if (content.TextStyle == nil or type(content.TextStyle) == 'string') then
                     content.TextStyle = window.GetTextStyle(content.TextStyle)
                 end
-                content.BackColor = options.BackColor or content.TextStyle.BackColor or theme.BackColor
-                content.FontColor = options.FontColor or content.TextStyle.FontColor or theme.FontColor
+                content.BackColor = options.BackColor or content.TextStyle.BackColor or window.Theme.BackColor
+                content.FontColor = options.FontColor or content.TextStyle.FontColor or window.Theme.FontColor
                 table.insert(container.Content, content)
                 return content
             end
@@ -872,6 +883,7 @@ end
 
 swindow.CreateTheme = function(options)
     local theme = {}
+    options = options or {}
 
     if (options.BackColor ~= nil and type(options.BackColor) == 'string') then
         options.BackColor = ColourNameToRGB(options.BackColor)
