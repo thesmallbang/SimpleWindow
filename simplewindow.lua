@@ -790,7 +790,8 @@ swindow.CreateWindow = function(config, theme)
         local top = options.Bounds.Top
 
         if (options.Alignment.X == swindow.Alignments.Center) then
-            left = (options.Bounds.Right - (options.Bounds.Left + textWidth)) / 2
+            left = options.Bounds.Left + (((options.Bounds.Right - options.Bounds.Left) / 2) - (textWidth / 2))
+            print(left)
         end
         if (options.Alignment.X == swindow.Alignments.End) then
             left = (options.Bounds.Right - textWidth)
