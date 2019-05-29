@@ -254,7 +254,7 @@ swindow.CreateWindow = function(config, theme)
                 local cursorInContainerBox = {X = 0, Y = 0}
 
                 local rowCompleted = false
-                for _, content in pairs(container.Content) do
+                for icontent, content in pairs(container.Content) do
                     local contentBox = {
                         Left = containerBox.Left + cursorInContainerBox.X,
                         Top = containerBox.Top + cursorInContainerBox.Y
@@ -291,6 +291,18 @@ swindow.CreateWindow = function(config, theme)
                             cursorInContainerBox.X = 0
                             cursorInContainerBox.Y = cursorInContainerBox.Y + (contentBox.Bottom - contentBox.Top)
                             containerheight = cursorInContainerBox.Y + contentheight
+                        else
+                            local nextContent = container.Content[icontent + 1]
+                            if (nextContent ~= nil) then
+                                local sizePercent = nextContent.GetSizePercent(size.Name) or 1
+                                local cw = ((containerBox.Right - containerBox.Left) / 100) * sizePercent
+                                if ((cursorInContainerBox.X + cw) > viewBox.Right - viewBox.Left) then
+                                    cursorInContainerBox.X = 0
+                                    cursorInContainerBox.Y =
+                                        cursorInContainerBox.Y + (contentBox.Bottom - contentBox.Top)
+                                    containerheight = cursorInContainerBox.Y + contentheight
+                                end
+                            end
                         end
                     end
 
