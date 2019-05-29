@@ -32,12 +32,13 @@ Step 2: Add a view
         Name = 'Main'
     }
 
+  -- You can add/edit any amount of ranges like this
   --   view.Sizes =  {
-  --              {Name = 'xs', To = 0},
-  --              {Name = 'sm', To = 250},
-  --              {Name = 'md', To = 400},
-  --              {Name = 'lg', To = 600},
-  --              {Name = 'xl', To = 800}
+  --              {Name = 'xs', From = 0},
+  --              {Name = 'sm', From = 250},
+  --              {Name = 'md', From = 400},
+  --              {Name = 'lg', From = 600},
+  --              {Name = 'xl', From = 800}
   --         }
 
     -- OnUpdate will be called after the UpdateInterval has passed or a refresh is being forced
