@@ -350,6 +350,7 @@ swindow.CreateWindow = function(config, theme)
                 Alignment = content.Alignment,
                 Bounds = contentbounds,
                 Tooltip = content.Tooltip,
+                BackAttached = content.BackAttached,
                 Action = content.Action,
                 FontColor = content.FontColor,
                 BackColor = content.BackColor,
@@ -431,6 +432,7 @@ swindow.CreateWindow = function(config, theme)
                 content.Action = options.Action
                 content.Tooltip = options.Tooltip
                 content.Height = options.Height
+                content.BackAttached = options.BackAttached
                 content.TextStyle = options.TextStyle or container.TextStyle
                 content.Alignment = options.Alignment or {X = D_CONTAINERALIGNMENT_X, Y = D_CONTAINERALIGNMENT_Y}
 
@@ -897,7 +899,7 @@ swindow.CreateWindow = function(config, theme)
                     callback,
                     '',
                     '',
-                    content.Tooltip or '',
+                    options.Tooltip or '',
                     cursor, -- hand cursor
                     0
                 )
