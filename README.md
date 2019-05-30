@@ -209,40 +209,40 @@ mywindow = simplewindow.CreateWindow(
 ##### Configuration Options
 | Param Name     | Description                                                         | DefaultValue |
 | -------------- | ------------------------------------------------------------------- | ------------ |
-| Id             | A unique id for your window.                                        |
-| UpdateInterval | How often should the callback for refreshing data and drawing occur |
-| Layer          | The higher the layer the more likely to draw ontop of other windows |
+| Id             | A unique id for your window.                                        | Random
+| UpdateInterval | How often should the callback for refreshing data and drawing occur | 1 (second)
+| Layer          | The higher the layer the more likely to draw ontop of other windows | 100
 | Title          | Text to display at the top of your window.                          |
-| TitleAlignment | simplewindow.Alignments.(Start,Center,End)                          |
-| Width          | The default width of the window                                     |
-| Height         | The default height of the window                                    |
-| Left           | The distance from the left side of the screen                       |
+| TitleAlignment | simplewindow.Alignments.(Start,Center,End)  (refers to x align atm)                          | Start
+| Width          | The default width of the window                                     | 300
+| Height         | The default height of the window                                    | 300
+| Left           | The distance from the left side of the screen                       | 
 | Top            | The distance from the top of the screen                             |
-| AllowResize    | Allow the window to be resized by the user                          |
-| SaveState      | Automatically save/load the last size/position the window was in    |
+| AllowResize    | Allow the window to be resized by the user                          | true
+| SaveState      | Automatically save/load the last size/position the window was in    | true
 | --             | These settings will be moved to theme soon                          |
 | BorderWidth    | How wide of the border pen. Yes it should be in theme but.. not yet |
 | BodyPadding    | The content in the view is what distance from the border            |
 | TitlePadding   | The title what distance from the borders                            |
-| BodyPadding    | The content in the view is what distance from the border            |
+
 
 
 
 ##### Theme Options
 | Param Name      | Description                                     | DefaultValue |
 | --------------- | ----------------------------------------------- | ------------ |
-| BackColor       | string or number for window background color    |
-| BorderColor     | string or number for window border color        |
-| DefaultFont     | Font name to use when nothing has been set      |
-| DefaultFontSize | Font size to use when nothing has been set      |
-| TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor |
+| BackColor       | string or number for window background color    | Black
+| BorderColor     | string or number for window border color        | Teal
+| DefaultFont     | Font name to use when nothing has been set      | Lucida Console
+| DefaultFontSize | Font size to use when nothing has been set      | 9
+| TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor | 
 
 
 ##### Container Options
 | Param Name   | Description                                                  | DefaultValue |
 | ------------ | ------------------------------------------------------------ | ------------ |
 | Name         | a name for the container pretty useless atm except logging   |
-| Style        | simplewindow.ContainerStyles. (Column, Row, RowWrap)         |
+| Style        | simplewindow.ContainerStyles. (Column, Row, RowWrap)         | RowWrap
 | Sizes        | specify the sizes for the container at specific width states |
 | ContentSizes | default size for content at specific width states            |
 | TextStyle    | default textstyle for content                                |
