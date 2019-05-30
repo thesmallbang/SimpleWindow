@@ -212,32 +212,6 @@ swindow.CreateWindow = function(config, theme)
 
         view.OnUpdate = options.OnUpdate
 
-        view.DrawContainers2 = function()
-            local viewBox = {
-                Left = window.__state.contentLeft,
-                Top = window.__state.contentTop,
-                Right = (window.Config.Width - window.__state.contentLeft),
-                Bottom = (window.Config.Height - window.__state.contentLeft)
-            }
-            print('in drawcontainers')
-            local cursorInViewBox = {
-                X = 0,
-                Y = 0
-            }
-
-            local size = view.QuerySize()
-            if (size == nil) then
-                print('no size')
-                return
-            end
-
-            local containerheight = 0
-
-            for ic, container in ipairs(view.Containers) do
-                cursorInViewBox = view.DrawContainer(container, size, cursorInViewBox, viewBox, containerheight)
-            end
-        end
-
         view.DrawContainers = function()
             local cursor = {X = 0}
             local viewbounds = {
@@ -267,7 +241,6 @@ swindow.CreateWindow = function(config, theme)
                 if (cursor.X >= bounds.Right) then
                     cursor.X = 0
                     bounds.Top = furthestYInRow
-                    print('biggest now ' .. furthestYInRow)
                 else
                     -- check if the next container needs to wrap
                     local nextcontainer = view.Containers[containerIndex + 1]
@@ -455,8 +428,10 @@ swindow.CreateWindow = function(config, theme)
                 content.Text = options.Text or 'Lorem ipsum'
                 content.Action = options.Action
                 content.Tooltip = options.Tooltip
+                content.Height = options.Height
                 content.TextStyle = options.TextStyle or container.TextStyle
-                content.Alignment = (options.Alignment) or (container.Alignment or D_CONTAINERALIGNMENT)
+                content.Alignment = options.Alignment or {X = D_CONTAINERALIGNMENT_X, Y = D_CONTAINERALIGNMENT_Y}
+
                 content.Sizes =
                     options.Sizes or
                     (container.ContentSizes or
@@ -835,7 +810,7 @@ swindow.CreateWindow = function(config, theme)
         end
 
         if (options.Alignment.Y == swindow.Alignments.Center) then
-            top = (options.Bounds.Bottom - (options.Bounds.Top + textHeight)) / 2
+            top = top + (((options.Bounds.Bottom - options.Bounds.Top) / 2) - (textHeight / 2))
         end
         if (options.Alignment.Y == swindow.Alignments.End) then
             top = (options.Bounds.Bottom - textHeight)
