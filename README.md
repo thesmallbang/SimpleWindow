@@ -127,7 +127,8 @@ Step 2: Add a view
 
         local mythirdContainer =
             v.AddContainer {
-            Sizes = {{Name = 'xs', Percent = 100}, {Name = 'sm', Percent = 100}, {Name = 'md', Percent = 70}}
+            Sizes = {{Name = 'xs', Percent = 100}, {Name = 'sm', Percent = 100}, {Name = 'md', Percent = 70}},
+            ContentSizes = {{Name = 'xs', Percent = 100}, {Name = 'sm', Percent = 100}, {Name = 'md', Percent = 50}}
         }
 
         mythirdContainer.AddContent {}
