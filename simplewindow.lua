@@ -29,7 +29,9 @@ local D_ALLOWRESIZE = true
 local D_MINWIDTH = 100
 local D_MINHEIGHT = 50
 local D_CONTAINERSTYLE = swindow.ContainerStyles.RowWrap
-local D_CONTAINERALIGNMENT = swindow.Alignments.Start
+local D_CONTAINERALIGNMENT_X = swindow.Alignments.Start
+local D_CONTAINERALIGNMENT_Y = swindow.Alignments.Center
+
 local D_CONTAINERSPACING = 3
 
 local function isModuleAvailable(name)
@@ -210,23 +212,14 @@ swindow.CreateWindow = function(config, theme)
 
         view.OnUpdate = options.OnUpdate
 
-        view.Draw = function(options)
-            -- no content yet or we cache expired
-            if (view.Containers == nil) then
-                if (view.OnUpdate ~= nil) then
-                    view:OnUpdate()
-                end
-            end
-
-            -- ok now finally working on drawing some content...
-
+        view.DrawContainers2 = function()
             local viewBox = {
                 Left = window.__state.contentLeft,
                 Top = window.__state.contentTop,
                 Right = (window.Config.Width - window.__state.contentLeft),
                 Bottom = (window.Config.Height - window.__state.contentLeft)
             }
-
+            print('in drawcontainers')
             local cursorInViewBox = {
                 X = 0,
                 Y = 0
@@ -237,140 +230,168 @@ swindow.CreateWindow = function(config, theme)
                 print('no size')
                 return
             end
+
             local containerheight = 0
+
             for ic, container in ipairs(view.Containers) do
-                -- query our current width and get the appropriate size
-                -- for now we will just hope they are added in the correct detection order... smallest to largest
-                local sizePercent = container.GetSizePercent(size.Name) or 1
-                local containerwidth = ((viewBox.Right - viewBox.Left) / 100) * sizePercent
+                cursorInViewBox = view.DrawContainer(container, size, cursorInViewBox, viewBox, containerheight)
+            end
+        end
 
-                local containerBox = {
-                    Left = viewBox.Left + cursorInViewBox.X,
-                    Top = viewBox.Top + cursorInViewBox.Y
-                }
-                containerBox.Right = containerBox.Left + containerwidth
+        view.DrawContainers = function()
+            local cursor = {X = 0}
+            local viewbounds = {
+                Left = window.__state.contentLeft,
+                Top = window.__state.contentTop,
+                Right = (window.Config.Width - window.__state.contentLeft),
+                Bottom = (window.Config.Height - window.__state.contentLeft)
+            }
 
-                if (container.Height ~= nil) then
-                    containerBox.Bottom = containerBox.Top + container.Height
+            local size = view.QuerySize()
+            if (size == nil) then
+                print('no size')
+                return
+            end
+
+            local furthestYInRow = 0
+            local bounds = viewbounds
+            for containerIndex, container in ipairs(view.Containers) do
+                local lastBounds = view.DrawContainer(containerIndex, container, cursor.X, size, bounds)
+
+                cursor.X = cursor.X + (lastBounds.Right - lastBounds.Left) -- + margin etc etc
+                -- keep track of the tallest container on the row
+                if (furthestYInRow < lastBounds.Bottom) then
+                    furthestYInRow = lastBounds.Bottom
+                end
+
+                if (cursor.X >= bounds.Right) then
+                    cursor.X = 0
+                    bounds.Top = furthestYInRow
+                    print('biggest now ' .. furthestYInRow)
                 else
-                    containerBox.Bottom = viewBox.Bottom
-                end
-
-                if (containerBox.Right > viewBox.Right) then
-                    containerBox.Right = viewBox.Right
-                end
-                if (containerBox.Bottom > viewBox.Bottom) then
-                    containerBox.Bottom = viewBox.Bottom
-                end
-
-                local cursorInContainerBox = {X = 0, Y = 0}
-
-                local rowCompleted = false
-                for icontent, content in pairs(container.Content) do
-                    local contentBox = {
-                        Left = containerBox.Left + cursorInContainerBox.X,
-                        Top = containerBox.Top + cursorInContainerBox.Y
-                    }
-
-                    local sizePercent = content.GetSizePercent(size.Name) or 1
-                    local contentwidth = ((containerBox.Right - containerBox.Left) / 100) * sizePercent
-                    local contentheight = window.GetTextHeight(content.TextStyle)
-                    contentBox.Right = contentBox.Left + contentwidth
-                    contentBox.Bottom = contentBox.Top + contentheight
-
-                    if (rowCompleted == false) then
-                        window.DrawText {
-                            Text = content.Text,
-                            Bounds = contentBox,
-                            TextStyle = content.TextStyle,
-                            FontColor = content.FontColor,
-                            BackColor = content.BackColor,
-                            Alignment = {X = content.Alignment}
-                        }
-                    end
-
-                    cursorInContainerBox.X = (cursorInContainerBox.X + (contentBox.Right - contentBox.Left))
-
-                    -- auto go to next row
-                    if (container.Style == swindow.ContainerStyles.Column) then
-                        cursorInContainerBox.Y = cursorInContainerBox.Y + (contentBox.Bottom - contentBox.Top)
-
-                        if (containerheight < cursorInContainerBox.Y + contentheight) then
-                            containerheight = cursorInContainerBox.Y + contentheight
-                        end
-                        cursorInContainerBox.X = 0
-                    end
-
-                    if (container.Style == swindow.ContainerStyles.RowWrap) then
-                        if (cursorInContainerBox.X >= (containerBox.Right - containerBox.Left)) then
-                            cursorInContainerBox.X = 0
-                            cursorInContainerBox.Y = cursorInContainerBox.Y + (contentBox.Bottom - contentBox.Top)
-                            if
-                                (container.Content[icontent + 1] == nil and
-                                    containerheight < cursorInContainerBox.Y + contentheight)
-                             then
-                                containerheight = cursorInContainerBox.Y
-                            end
-                        else
-                            local nextContent = container.Content[icontent + 1]
-                            if (nextContent ~= nil) then
-                                local sizePercent = nextContent.GetSizePercent(size.Name) or 1
-                                local cw = ((containerBox.Right - containerBox.Left) / 100) * sizePercent
-                                if ((cursorInContainerBox.X + cw) >= viewBox.Right - viewBox.Left) then
-                                    cursorInContainerBox.X = 0
-                                    cursorInContainerBox.Y =
-                                        cursorInContainerBox.Y + (contentBox.Bottom - contentBox.Top)
-                                    if (containerheight < cursorInContainerBox.Y + contentheight) then
-                                        containerheight = cursorInContainerBox.Y + contentheight
-                                    end
-                                end
-                            end
+                    -- check if the next container needs to wrap
+                    local nextcontainer = view.Containers[containerIndex + 1]
+                    if (nextcontainer ~= nil) then
+                        local nextwidth = view.GetContainerWidth(nextcontainer, size, bounds.Right - bounds.Left)
+                        if ((cursor.X + nextwidth) >= bounds.Right) then
+                            cursor.X = 0
+                            bounds.Top = furthestYInRow
                         end
                     end
-
-                    if (container.Style == swindow.ContainerStyles.Row) then
-                        if (cursorInContainerBox.X >= (containerBox.Right - containerBox.Left)) then
-                            rowCompleted = true
-                        end
-                    end
-
-                    if
-                        (container.Content[icontent + 1] ~= nil and
-                            containerheight < cursorInContainerBox.Y + contentheight)
-                     then
-                        containerheight = cursorInContainerBox.Y + contentheight
-                    end
                 end
 
-                if (container.Height ~= nil) then
-                    containerheight = container.Height
-                end
-
-                cursorInViewBox.X = cursorInViewBox.X + containerwidth
-                if (cursorInViewBox.X >= (viewBox.Right - viewBox.Left)) then
-                    cursorInViewBox.X = 0
-                    cursorInViewBox.Y = cursorInViewBox.Y + containerheight
-                    containerheight = 0
-                else
-                    -- check the next container and see if its too large
-                    local nextContainer = view.Containers[ic + 1]
-                    if (nextContainer ~= nil) then
-                        local sp = nextContainer.GetSizePercent(size.Name) or 1
-                        local ncwidth = ((viewBox.Right - viewBox.Left) / 100) * sp
-
-                        local p1 = (tonumber(cursorInViewBox.X + containerwidth)) - 1
-                        -- so for some reason lua was passing the check 465 > 465 = true ...
-                        -- i can't seem to figure out why so for now just subtracting one to force it to still match how i want
-                        -- though i'm sure there will be some pixel perfect bug added
-                        local p2 = (tonumber(viewBox.Right - viewBox.Left))
-                        if (p1 > p2) then
-                            cursorInViewBox.X = 0
-                            cursorInViewBox.Y = cursorInViewBox.Y + containerheight
-                            containerheight = 0
-                        end
-                    end
+                if (bounds.Top >= bounds.Bottom) then
+                    -- dont bother to keep going it would be off our window
+                    return
                 end
             end
+        end
+
+        view.GetContainerWidth = function(container, size, parentwidth)
+            local containerwidth = (parentwidth / 100) * container.GetSizePercent(size.Name)
+            return containerwidth
+        end
+
+        view.GetContentWidth = function(content, size, parentwidth)
+            return (parentwidth / 100) * content.GetSizePercent(size.Name)
+        end
+
+        view.DrawContainer = function(containerIndex, container, left, size, parentBounds)
+            local containerCursor = {X = 0}
+            local containerwidth = view.GetContainerWidth(container, size, parentBounds.Right - parentBounds.Left)
+            local containerheight = 0 -- for counting height when not explicitly specified
+            local containerbounds = {
+                Left = parentBounds.Left + containerCursor.X + left,
+                Top = parentBounds.Top
+            }
+            containerbounds.Bottom = containerbounds.Top + (container.Height or parentBounds.Bottom)
+            if (containerbounds.Bottom > parentBounds.Bottom) then
+                containerbounds.Bottom = parentBounds.Bottom
+            end
+            containerbounds.Right = containerbounds.Left + containerwidth
+
+            -- window.DrawText {
+            --     Text = container.Name,
+            --     Bounds = containerbounds,
+            --    -- BackColor = container.BackColor or math.random(1, 30000)
+            -- }
+
+            local height = view.DrawContents(container, containerCursor.X, size, containerbounds)
+            containerbounds.Bottom = containerbounds.Top + (container.Height or height)
+
+            return containerbounds
+        end
+
+        view.DrawContents = function(container, left, size, parentBounds)
+            local contentcursor = {X = 0, Y = 0}
+            local tallestContentInRow = 0
+
+            for contentIndex, content in ipairs(container.Content) do
+                local contentbounds = view.DrawContent(contentIndex, content, contentcursor, size, parentBounds)
+
+                if (tallestContentInRow < contentbounds.Bottom - contentbounds.Top) then
+                    tallestContentInRow = contentbounds.Bottom - contentbounds.Top
+                end
+
+                contentcursor.X = contentcursor.X + (contentbounds.Right - contentbounds.Left) -- + margin etc etc
+
+                -- check if the next container needs to wrap
+                local nextcontent = container.Content[contentIndex + 1]
+                if (nextcontent ~= nil) then
+                    local nextwidth = view.GetContentWidth(nextcontent, size, parentBounds.Right - parentBounds.Left)
+
+                    if (parentBounds.Left + (contentcursor.X + nextwidth) > parentBounds.Right) then
+                        contentcursor.X = 0
+                        contentcursor.Y = contentcursor.Y + tallestContentInRow
+                        tallestContentInRow = 0
+                    end
+                end
+
+                if (contentcursor.Y >= parentBounds.Bottom) then
+                    -- dont bother to keep going it would be off our window
+                    return contentcursor.Y
+                end
+            end
+
+            return contentcursor.Y + tallestContentInRow
+        end
+
+        view.DrawContent = function(contentIndex, content, cursor, size, parentBounds)
+            local contentheight = content.Height or (window.GetTextHeight(content.TextStyle) + 2)
+            local contentbounds = {
+                Left = parentBounds.Left + cursor.X,
+                Top = parentBounds.Top + cursor.Y
+            }
+            contentbounds.Right =
+                contentbounds.Left + view.GetContentWidth(content, size, parentBounds.Right - parentBounds.Left)
+            contentbounds.Bottom = contentbounds.Top + contentheight
+
+            if (contentbounds.Bottom > parentBounds.Bottom) then
+                contentbounds.Bottom = parentBounds.Bottom
+            end
+
+            window.DrawText {
+                Text = content.Text,
+                Alignment = content.Alignment,
+                Bounds = contentbounds,
+                FontColor = content.FontColor,
+                BackColor = content.BackColor,
+                TextStyle = content.TextStyle
+            }
+
+            return contentbounds
+        end
+
+        view.Draw = function(options)
+            -- no content yet or we cache expired
+            if (view.Containers == nil) then
+                if (view.OnUpdate ~= nil) then
+                    view:OnUpdate()
+                end
+            end
+
+            -- ok now finally working on drawing some content...
+            view.DrawContainers()
         end
 
         view.AddContainer = function(options)
@@ -378,10 +399,10 @@ swindow.CreateWindow = function(config, theme)
 
             local container = {}
 
-            container.Name = container.Name or 'Lorem ipsum'
+            container.Name = options.Name or 'Lorem ipsum'
             container.Style = options.Style or D_CONTAINERSTYLE
             container.Height = options.Height
-            container.Alignment = options.Alignment or D_CONTAINERALIGNMENT
+            container.Alignment = options.Alignment or {X = D_CONTAINERALIGNMENT_X, Y = D_CONTAINERALIGNMENT_Y}
             container.Spacing = options.Spacing or D_CONTAINERSPACING
             container.Content = options.Content or {}
             container.BackColor = options.BackColor
@@ -431,7 +452,7 @@ swindow.CreateWindow = function(config, theme)
                 content.Id = options.Id or 'content_' .. math.random(1, 100000)
                 content.Text = options.Text or 'Lorem ipsum'
                 content.TextStyle = options.TextStyle or container.TextStyle
-                content.Alignment = options.Alignment or container.Alignment or D_CONTAINERALIGNMENT
+                content.Alignment = (options.Alignment) or (container.Alignment or D_CONTAINERALIGNMENT)
                 content.Sizes =
                     options.Sizes or
                     (container.ContentSizes or
