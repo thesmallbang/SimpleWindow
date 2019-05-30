@@ -86,9 +86,11 @@ Step 2: Add a view
 
         local mySecondContainer =
             v.AddContainer {
-            Sizes = {{Name = 'xs', Percent = 0}, {Name = 'sm', Percent = 0}, {Name = 'md', Percent = 30}}, -- hide content it when smaller than medium
+            Sizes = {{Name = 'xs', Percent = 0}, {Name = 'sm', Percent = 0}, {Name = 'md', Percent = 30}},
+            -- hide container it when smaller than medium
             -- right now 0 percent does not save any draw call performance and is just purely math ... todo
-            ContentSizes = {{Name = 'xs', Percent = 50}} -- even though xs and sm aren't showing we still just want it at 50% when it is eventually visible
+            ContentSizes = {{Name = 'xs', Percent = 50}}
+            -- even though xs and sm aren't showing we still just want it at 50% when it is eventually visible
         }
 
         mySecondContainer.AddContent {
@@ -251,7 +253,7 @@ mywindow = simplewindow.CreateWindow(
 | --------------- | ----------------------------------------------------------- | ------------ |
 | Id              | unique id for the content, used in callbacks from links etc | Random       |
 | Text            | What text is in the content                                 |
-| Alignment.(X,Y) | simplewindow.Alignments.(Start,Center,End)                  | Start        |
+| Alignment.(X,Y) | simplewindow.Alignments.(Start,Center,End)                  | Start, Center|
 | TextStyle       |                                                             |
 | Sizes           |                                                             |
 | BackColor       |                                                             |
@@ -259,6 +261,7 @@ mywindow = simplewindow.CreateWindow(
 | Action          | Function callback on content click                          |
 | Tooltip         | Tooltip for content mouse hover                             |
 | Height    | force a height on the content (overflow hidden always atm)    |
+| BackAttached    | Attached the background color to the text and not the content bounds. Basically the backcolor is only behind the text and not the entire bounds the content is allowed    | False |
 
 ### Structure
 | Object                          | Description                                                                                                                  |
