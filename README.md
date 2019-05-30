@@ -62,6 +62,7 @@ Step 2: Add a view
             BackColor = 'tan',
             TextStyle = 'title',
             Tooltip = 'Click me',
+            -- BackAttached = true, -- the back color will only appear under the text and not the entire bounds
             Action = function(options)
                 print('user clicked ' .. options.Text)
             end
