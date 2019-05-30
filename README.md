@@ -244,6 +244,7 @@ mywindow = simplewindow.CreateWindow(
 | Sizes        | specify the sizes for the container at specific width states |
 | ContentSizes | default size for content at specific width states            |
 | TextStyle    | default textstyle for content                                |
+| Height    | force a height on the container (overflow hidden always atm)    |
 
 ##### Content Options
 | Param Name      | Description                                                 | DefaultValue |
@@ -257,7 +258,7 @@ mywindow = simplewindow.CreateWindow(
 | FontColor       |                                                             |
 | Action          | Function callback on content click                          |
 | Tooltip         | Tooltip for content mouse hover                             |
-
+| Height    | force a height on the content (overflow hidden always atm)    |
 
 ### Structure
 | Object                          | Description                                                                                                                  |
@@ -265,7 +266,7 @@ mywindow = simplewindow.CreateWindow(
 | Window                          | The parent object                                                                                                            |
 | Window.Config                   | The main configuration object                                                                                                |
 | Window.Theme                    | Font / color information                                                                                                     |
-| Window.View[]                   | An array of views can be added to a window to give the user an option of displaying completely different sets of information |
+| Window.View[]                   | Basically tabs without a ui atm
 | Window.View.Container[]         | Each container is a grouping of text                                                                                         |
 | Window.View.Container.Content[] | Text                                                                                                                         |
 
