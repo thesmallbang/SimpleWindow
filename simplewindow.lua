@@ -5,7 +5,6 @@ swindow.Alignments = {
     Center = 1,
     End = 2
 }
-
 swindow.ContainerStyles = {
     Column = 0,
     Row = 1,
@@ -48,6 +47,15 @@ local function isModuleAvailable(name)
     end
 end
 
+swindow.Paint = function(win)
+    if (win.__state.hasPaintBuffer == true) then
+        -- https://github.com/fiendish/aardwolfclientpackage/wiki/Repaint-Buffer
+        BroadcastPlugin(999, 'repaint')
+    else
+        Redraw()
+    end
+end
+
 swindow.CreateWindow = function(config, theme)
     -- THE OPTIONS PASSED IN ON CONFIG MAY NOT RESPOND TO CHANGES AFTER CREATION
 
@@ -64,7 +72,8 @@ swindow.CreateWindow = function(config, theme)
             resizePositions = {X = 0, Y = 0},
             fontsLoaded = false,
             contentTop = 10,
-            contentLeft = 10
+            contentLeft = 10,
+            hasPaintBuffer = false
         }
     }
 
@@ -83,6 +92,8 @@ swindow.CreateWindow = function(config, theme)
     --------------------------------------------------
 
     function window.RegisterView(view)
+        window.__state.hasPaintBuffer = IsPluginInstalled('abc1a0944ae4af7586ce88dc')
+
         table.insert(window.__state.views, view)
     end
 
@@ -119,6 +130,7 @@ swindow.CreateWindow = function(config, theme)
 
         return WindowTextWidth(window.Config.Id, textStyle, text, false)
     end
+
     function window.GetTextHeight(textStyle)
         if (type(textStyle) ~= 'string') then
             textStyle = textStyle.Name
@@ -711,7 +723,7 @@ swindow.CreateWindow = function(config, theme)
                         }
                     }
 
-                    Redraw()
+                    swindow.Paint(window)
                 end
                 _G['ResizeStop' .. window.Config.Id] = function()
                     window.__state.isResizing = false
