@@ -311,7 +311,9 @@ swindow.CreateWindow = function(config, theme)
                 -- check if the next container needs to wrap
                 local nextcontent = container.Content[contentIndex + 1]
                 if (nextcontent ~= nil) then
-                    local nextwidth = view.GetContentWidth(nextcontent, size, parentBounds.Right - parentBounds.Left)
+                    local nextwidth =
+                        view.GetContentWidth(nextcontent, size, parentBounds.Right - parentBounds.Left) - 1
+                    -- had to add this -1 .. that means... something is off...
 
                     if (parentBounds.Left + (contentcursor.X + nextwidth) > parentBounds.Right) then
                         contentcursor.X = 0
@@ -436,11 +438,7 @@ swindow.CreateWindow = function(config, theme)
                     options.Sizes or
                     (container.ContentSizes or
                         {
-                            {Name = 'xs', Percent = 100},
-                            {Name = 'sm', Percent = 100},
-                            {Name = 'md', Percent = 100},
-                            {Name = 'lg', Percent = 100},
-                            {Name = 'xl', Percent = 100}
+                            {Name = 'xs', Percent = 100}
                         })
                 content.GetSizePercent = function(name)
                     local potential = nil
@@ -877,11 +875,12 @@ swindow.CreateWindow = function(config, theme)
                 cursor = 1
             end
 
+            callback = ''
             if (options.Action ~= nil) then
                 callback = 'ContentClick' .. window.Config.Id .. '_' .. options.Id
 
                 _G[callback] = function(flags)
-                    options.Action()
+                    options.Action(options)
                 end
             end
 

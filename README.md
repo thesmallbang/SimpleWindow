@@ -42,7 +42,7 @@ Step 2: Add a view
   --         }
 
     -- OnUpdate will be called after the UpdateInterval has passed or a refresh is being forced
-    view.OnUpdate = function(v)
+      view.OnUpdate = function(v)
         -- we need a container to put our content in
         local mycontainer =
             v.AddContainer {
@@ -51,25 +51,123 @@ Step 2: Add a view
             ContentSizes = {
                 {Name = 'xs', Percent = '100'},
                 {Name = 'sm', Percent = '100'},
-                {Name = 'md', Percent = '50'},
-                {Name = 'lg', Percent = '25'}, -- anything large and up we stick with 25% width
+                {Name = 'md', Percent = '33'} -- anything medium and up we stick with 33% width
             },
             TextStyle = 'body'
             -- for more on text styles see the configuration section.
         }
 
         mycontainer.AddContent {
-            Text = 'Hola'
+            Text = 'Hola',
+            BackColor = 'tan',
+            TextStyle = 'title',
+            Tooltip = 'Click me',
+            Action = function(options)
+                print('user clicked ' .. options.Text)
+            end
         }
         mycontainer.AddContent {
             Text = 'Hello',
-            BackColor = 'red'
+            BackColor = 'red',
+            FontColor = 'black',
+            Tooltip = 'Hello'
         }
         mycontainer.AddContent {
             Text = 'Aloha',
-            TextStyle = 'title'
+            BackColor = 23422
+        }
+
+        -- add a spacer
+        mycontainer.AddContent {
+            Text = '',
+            Sizes = {{Name = 'xs', Percent = 100}}
+        }
+
+        local mySecondContainer =
+            v.AddContainer {
+            Sizes = {{Name = 'xs', Percent = 0}, {Name = 'sm', Percent = 0}, {Name = 'md', Percent = 30}}, -- hide content it when smaller than medium
+            -- right now 0 percent does not save any draw call performance and is just purely math ... todo
+            ContentSizes = {{Name = 'xs', Percent = 50}} -- even though xs and sm aren't showing we still just want it at 50% when it is eventually visible
+        }
+
+        mySecondContainer.AddContent {
+            Text = 'Stats',
+            BackColor = 'green',
+            Sizes = {{Name = 'xs', Percent = 100}}
+        }
+
+        mySecondContainer.AddContent {
+            Text = 'Level'
+        }
+        mySecondContainer.AddContent {
+            Text = '1'
+        }
+
+        mySecondContainer.AddContent {
+            Text = 'Str'
+        }
+        mySecondContainer.AddContent {
+            Text = '150'
+        }
+
+        mySecondContainer.AddContent {
+            Text = 'Health'
+        }
+
+        mySecondContainer.AddContent {
+            Text = '15000/15000'
+        }
+
+        mySecondContainer.AddContent {
+            Text = 'Mana'
+        }
+        mySecondContainer.AddContent {
+            Text = '15000/15000'
+        }
+
+        local mythirdContainer =
+            v.AddContainer {
+            Sizes = {{Name = 'xs', Percent = 100}, {Name = 'sm', Percent = 100}, {Name = 'md', Percent = 70}}
+        }
+
+        mythirdContainer.AddContent {}
+        mythirdContainer.AddContent {
+            BackColor = math.random(ColourNameToRGB('white'), ColourNameToRGB('black'))
+        }
+        mythirdContainer.AddContent {
+            BackColor = math.random(ColourNameToRGB('white'), ColourNameToRGB('black'))
+        }
+        mythirdContainer.AddContent {
+            BackColor = math.random(ColourNameToRGB('white'), ColourNameToRGB('black'))
+        }
+        mythirdContainer.AddContent {
+            BackColor = math.random(ColourNameToRGB('white'), ColourNameToRGB('black'))
+        }
+        mythirdContainer.AddContent {}
+
+        local myFourthContainer =
+            v.AddContainer {
+            Sizes = {{Name = 'xs', Percent = 100}}
+        }
+
+        myFourthContainer.AddContent {Text = ''} --spacer line since no real spacing/margin/padding support atm
+
+        myFourthContainer.AddContent {
+            Text = 'The larger end.',
+            Sizes = {{Name = 'xs', Percent = 0}, {Name = 'sm', Percent = 0}, {Name = 'md', Percent = 100}},
+            Alignment = {X = simplewindow.Alignments.Center},
+            BackColor = 'orange'
+        }
+
+        myFourthContainer.AddContent {
+            Text = 'The smaller end.',
+            Sizes = {{Name = 'xs', Percent = 100}, {Name = 'sm', Percent = 100}, {Name = 'md', Percent = 0}},
+            Alignment = {X = simplewindow.Alignments.Center},
+            BackColor = 'purple'
         }
     end
+
+
 
     mywindow.RegisterView(view)
 ```
