@@ -51,7 +51,7 @@ Step 2: Add a view
             ContentSizes = {
                 {Name = 'xs', Percent = '100'},
                 {Name = 'sm', Percent = '100'},
-                {Name = 'md', Percent = '33'} -- anything medium and up we stick with 33% width
+                {Name = 'md', Percent = '33.334'} -- anything medium and up we stick with 33% width
             },
             TextStyle = 'body'
             -- for more on text styles see the configuration section.
