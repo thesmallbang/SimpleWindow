@@ -15,7 +15,7 @@ Resizing
 ![resize](resizesample.png "Resizing")
 
 ####
-##### Creating the simplest window
+##### Creating the window in the pictures above
 
 Step 1: Somewhere before you want your window to first appear
 ```lua
