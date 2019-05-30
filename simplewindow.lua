@@ -374,6 +374,8 @@ swindow.CreateWindow = function(config, theme)
                 Text = content.Text,
                 Alignment = content.Alignment,
                 Bounds = contentbounds,
+                Tooltip = content.Tooltip,
+                Action = content.Action,
                 FontColor = content.FontColor,
                 BackColor = content.BackColor,
                 TextStyle = content.TextStyle
@@ -451,6 +453,8 @@ swindow.CreateWindow = function(config, theme)
                 local content = {}
                 content.Id = options.Id or 'content_' .. math.random(1, 100000)
                 content.Text = options.Text or 'Lorem ipsum'
+                content.Action = options.Action
+                content.Tooltip = options.Tooltip
                 content.TextStyle = options.TextStyle or container.TextStyle
                 content.Alignment = (options.Alignment) or (container.Alignment or D_CONTAINERALIGNMENT)
                 content.Sizes =
@@ -791,6 +795,7 @@ swindow.CreateWindow = function(config, theme)
         --  id, txt, textStyle, pos, tooltip, action
         options = options or {}
 
+        options.Id = options.Id or (options.Text:gsub('%s+', ''):gsub('%W', ''):sub(1, 10) .. math.random(1, 100000))
         if (options.TextStyle == nil) then
             options.TextStyle = window.GetTextStyle()
             assert(options.TextStyle ~= nil, 'Attempted to draw text with no matching style or default')
@@ -897,17 +902,25 @@ swindow.CreateWindow = function(config, theme)
                 cursor = 1
             end
 
+            if (options.Action ~= nil) then
+                callback = 'ContentClick' .. window.Config.Id .. '_' .. options.Id
+
+                _G[callback] = function(flags)
+                    options.Action()
+                end
+            end
+
             if (options.BackAttached == true) then
                 WindowAddHotspot(
                     window.Config.Id,
-                    'content' .. content.Name,
+                    'content' .. options.Id,
                     left,
                     top,
                     right,
                     bottom,
                     '',
                     '',
-                    'OnWindowContentClick',
+                    callback,
                     '',
                     '',
                     content.Tooltip or '',
@@ -917,17 +930,17 @@ swindow.CreateWindow = function(config, theme)
             else
                 WindowAddHotspot(
                     window.Config.Id,
-                    'content' .. content.Name,
+                    'content' .. options.Id,
                     options.Bounds.Left,
                     options.Bounds.Top,
                     options.Bounds.Right,
                     options.Bounds.Bottom,
                     '',
                     '',
-                    'OnWindowContentClick',
+                    callback,
                     '',
                     '',
-                    content.Tooltip or '',
+                    options.Tooltip or '',
                     cursor, -- hand cursor
                     0
                 )
