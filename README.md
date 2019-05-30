@@ -63,7 +63,8 @@ Step 2: Add a view
             TextStyle = 'title',
             Tooltip = 'Click me',
             -- BackAttached = true, -- the back color will only appear under the text and not the entire bounds
-            Action = function(options)
+            Action = function(options) -- options is all the options that were used to draw the text that were used creating the "link".
+            -- mostly everything in the conent but a few other things like the location on the window it was drew at etc
                 print('user clicked ' .. options.Text)
             end
         }
