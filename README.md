@@ -208,70 +208,70 @@ mywindow = simplewindow.CreateWindow(
 
 
 ##### Configuration Options
-| Param Name     | Description                                                         | DefaultValue |
-| -------------- | ------------------------------------------------------------------- | ------------ |
-| Id             | A unique id for your window.                                        | Random
-| UpdateInterval | How often should the callback for refreshing data and drawing occur | 1 (second)
-| Layer          | The higher the layer the more likely to draw ontop of other windows | 100
-| Title          | Text to display at the top of your window.                          |
-| TitleAlignment | simplewindow.Alignments.(Start,Center,End)  (refers to x align atm)                          | Start
-| Width          | The default width of the window                                     | 300
-| Height         | The default height of the window                                    | 300
-| Left           | The distance from the left side of the screen                       | 
-| Top            | The distance from the top of the screen                             |
-| AllowResize    | Allow the window to be resized by the user                          | true
-| SaveState      | Automatically save/load the last size/position the window was in    | true
-| --             | These settings will be moved to theme soon                          |
-| BorderWidth    | How wide of the border pen. Yes it should be in theme but.. not yet |
-| BodyPadding    | The content in the view is what distance from the border            |
-| TitlePadding   | The title what distance from the borders                            |
+| Param Name     | Description                                                                      | DefaultValue |
+| -------------- | -------------------------------------------------------------------------------- | ------------ |
+| Id             | A unique id for your window.                                                     | Random       |
+| UpdateInterval | How often should the callback for refreshing data and drawing occur              | 1 (second)   |
+| Layer          | The higher the layer the more likely to draw ontop of other windows              | 100          |
+| Title          | Text to display at the top of your window.                                       |
+| TitleAlignment | simplewindow.Alignments.(Start,Center,End)  (refers to x align atm)              | Start        |
+| Width          | The default width of the window                                                  | 300          |
+| Height         | The default height of the window                                                 | 300          |
+| Left           | The distance from the left side of the screen                                    |
+| Top            | The distance from the top of the screen                                          |
+| AllowResize    | Allow the window to be resized by the user                                       | true         |
+| SaveState      | Automatically save/load the last size/position the window was in                 | true         |
+| --             | These settings will be moved to theme soon                                       |
+| BorderWidth    | How wide of the border pen. Yes it should be in theme but.. not yet              |
+| BodyPadding    | (Left,Top,Right,Bottom) The content in the view is what distance from the border |
+| TitlePadding   | (Left,Top,Right,Bottom) The title what distance from the borders                 |
 
 
 
 
 ##### Theme Options
-| Param Name      | Description                                     | DefaultValue |
-| --------------- | ----------------------------------------------- | ------------ |
-| BackColor       | string or number for window background color    | Black
-| BorderColor     | string or number for window border color        | Teal
-| DefaultFont     | Font name to use when nothing has been set      | Lucida Console
-| DefaultFontSize | Font size to use when nothing has been set      | 9
-| TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor | 
+| Param Name      | Description                                     | DefaultValue   |
+| --------------- | ----------------------------------------------- | -------------- |
+| BackColor       | string or number for window background color    | Black          |
+| BorderColor     | string or number for window border color        | Teal           |
+| DefaultFont     | Font name to use when nothing has been set      | Lucida Console |
+| DefaultFontSize | Font size to use when nothing has been set      | 9              |
+| TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor |
 
 
 ##### Container Options
 | Param Name   | Description                                                  | DefaultValue |
 | ------------ | ------------------------------------------------------------ | ------------ |
 | Name         | a name for the container pretty useless atm except logging   |
-| Style        | simplewindow.ContainerStyles. (Column, Row, RowWrap)         | RowWrap
+| Style        | simplewindow.ContainerStyles. (Column, Row, RowWrap)         | RowWrap      |
 | Sizes        | specify the sizes for the container at specific width states |
 | ContentSizes | default size for content at specific width states            |
 | TextStyle    | default textstyle for content                                |
-| Height    | force a height on the container (overflow hidden always atm)    |
+| Height       | force a height on the container (overflow hidden always atm) |
 
 ##### Content Options
-| Param Name      | Description                                                 | DefaultValue |
-| --------------- | ----------------------------------------------------------- | ------------ |
-| Id              | unique id for the content, used in callbacks from links etc | Random       |
-| Text            | What text is in the content                                 |
-| Alignment.(X,Y) | simplewindow.Alignments.(Start,Center,End)                  | Start, Center|
-| TextStyle       |                                                             |
-| Sizes           |                                                             |
-| BackColor       |                                                             |
-| FontColor       |                                                             |
-| Action          | Function callback on content click                          |
-| Tooltip         | Tooltip for content mouse hover                             |
-| Height    | force a height on the content (overflow hidden always atm)    |
-| BackAttached    | Attached the background color to the text and not the content bounds. Basically the backcolor is only behind the text and not the entire bounds the content is allowed    | False |
+| Param Name      | Description                                                                                                                                                            | DefaultValue  |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Id              | unique id for the content, used in callbacks from links etc                                                                                                            | Random        |
+| Text            | What text is in the content                                                                                                                                            |
+| Alignment.(X,Y) | simplewindow.Alignments.(Start,Center,End)                                                                                                                             | Start, Center |
+| TextStyle       |                                                                                                                                                                        |
+| Sizes           |                                                                                                                                                                        |
+| BackColor       |                                                                                                                                                                        |
+| FontColor       |                                                                                                                                                                        |
+| Action          | Function callback on content click                                                                                                                                     |
+| Tooltip         | Tooltip for content mouse hover                                                                                                                                        |
+| Height          | force a height on the content (overflow hidden always atm)                                                                                                             |
+| BackAttached    | Attached the background color to the text and not the content bounds. Basically the backcolor is only behind the text and not the entire bounds the content is allowed | False         |
 
 ### Structure
-| Object                          | Description                                                                                                                  |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Window                          | The parent object                                                                                                            |
-| Window.Config                   | The main configuration object                                                                                                |
-| Window.Theme                    | Font / color information                                                                                                     |
-| Window.View[]                   | Basically tabs without a ui atm
-| Window.View.Container[]         | Each container is a grouping of text                                                                                         |
-| Window.View.Container.Content[] | Text                                                                                                                         |
+| Object                          | Description                          |
+| ------------------------------- | ------------------------------------ |
+| Window                          | The parent object                    |
+| Window.Config                   | The main configuration object        |
+| Window.Theme                    | Font / color information             |
+| Window.View[]                   | Basically tabs without a ui atm      |
+| Window.View.Container[]         | Each container is a grouping of text |
+| Window.View.Container.Content[] | Text                                 |
 
 
