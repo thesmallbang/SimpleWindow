@@ -51,7 +51,7 @@ Step 2: Add a view
             ContentSizes = {
                 {Name = 'xs', Percent = '100'},
                 {Name = 'sm', Percent = '100'},
-                {Name = 'md', Percent = '33'} -- anything medium and up we stick with 33% width
+                {Name = 'md', Percent = '33.334'} -- anything medium and up we stick with 33% width
             },
             TextStyle = 'body'
             -- for more on text styles see the configuration section.
@@ -87,9 +87,11 @@ Step 2: Add a view
 
         local mySecondContainer =
             v.AddContainer {
-            Sizes = {{Name = 'xs', Percent = 0}, {Name = 'sm', Percent = 0}, {Name = 'md', Percent = 30}}, -- hide content it when smaller than medium
+            Sizes = {{Name = 'xs', Percent = 0}, {Name = 'sm', Percent = 0}, {Name = 'md', Percent = 30}},
+            -- hide container it when smaller than medium
             -- right now 0 percent does not save any draw call performance and is just purely math ... todo
-            ContentSizes = {{Name = 'xs', Percent = 50}} -- even though xs and sm aren't showing we still just want it at 50% when it is eventually visible
+            ContentSizes = {{Name = 'xs', Percent = 50}}
+            -- even though xs and sm aren't showing we still just want it at 50% when it is eventually visible
         }
 
         mySecondContainer.AddContent {
@@ -208,57 +210,59 @@ mywindow = simplewindow.CreateWindow(
 ##### Configuration Options
 | Param Name     | Description                                                         | DefaultValue |
 | -------------- | ------------------------------------------------------------------- | ------------ |
-| Id             | A unique id for your window.                                        |
-| UpdateInterval | How often should the callback for refreshing data and drawing occur |
-| Layer          | The higher the layer the more likely to draw ontop of other windows |
+| Id             | A unique id for your window.                                        | Random
+| UpdateInterval | How often should the callback for refreshing data and drawing occur | 1 (second)
+| Layer          | The higher the layer the more likely to draw ontop of other windows | 100
 | Title          | Text to display at the top of your window.                          |
-| TitleAlignment | simplewindow.Alignments.(Start,Center,End)                          |
-| Width          | The default width of the window                                     |
-| Height         | The default height of the window                                    |
-| Left           | The distance from the left side of the screen                       |
+| TitleAlignment | simplewindow.Alignments.(Start,Center,End)  (refers to x align atm)                          | Start
+| Width          | The default width of the window                                     | 300
+| Height         | The default height of the window                                    | 300
+| Left           | The distance from the left side of the screen                       | 
 | Top            | The distance from the top of the screen                             |
-| AllowResize    | Allow the window to be resized by the user                          |
-| SaveState      | Automatically save/load the last size/position the window was in    |
+| AllowResize    | Allow the window to be resized by the user                          | true
+| SaveState      | Automatically save/load the last size/position the window was in    | true
 | --             | These settings will be moved to theme soon                          |
 | BorderWidth    | How wide of the border pen. Yes it should be in theme but.. not yet |
 | BodyPadding    | The content in the view is what distance from the border            |
 | TitlePadding   | The title what distance from the borders                            |
-| BodyPadding    | The content in the view is what distance from the border            |
+
 
 
 
 ##### Theme Options
 | Param Name      | Description                                     | DefaultValue |
 | --------------- | ----------------------------------------------- | ------------ |
-| BackColor       | string or number for window background color    |
-| BorderColor     | string or number for window border color        |
-| DefaultFont     | Font name to use when nothing has been set      |
-| DefaultFontSize | Font size to use when nothing has been set      |
-| TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor |
+| BackColor       | string or number for window background color    | Black
+| BorderColor     | string or number for window border color        | Teal
+| DefaultFont     | Font name to use when nothing has been set      | Lucida Console
+| DefaultFontSize | Font size to use when nothing has been set      | 9
+| TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor | 
 
 
 ##### Container Options
 | Param Name   | Description                                                  | DefaultValue |
 | ------------ | ------------------------------------------------------------ | ------------ |
 | Name         | a name for the container pretty useless atm except logging   |
-| Style        | simplewindow.ContainerStyles. (Column, Row, RowWrap)         |
+| Style        | simplewindow.ContainerStyles. (Column, Row, RowWrap)         | RowWrap
 | Sizes        | specify the sizes for the container at specific width states |
 | ContentSizes | default size for content at specific width states            |
 | TextStyle    | default textstyle for content                                |
+| Height    | force a height on the container (overflow hidden always atm)    |
 
 ##### Content Options
 | Param Name      | Description                                                 | DefaultValue |
 | --------------- | ----------------------------------------------------------- | ------------ |
 | Id              | unique id for the content, used in callbacks from links etc | Random       |
 | Text            | What text is in the content                                 |
-| Alignment.(X,Y) | simplewindow.Alignments.(Start,Center,End)                  | Start        |
+| Alignment.(X,Y) | simplewindow.Alignments.(Start,Center,End)                  | Start, Center|
 | TextStyle       |                                                             |
 | Sizes           |                                                             |
 | BackColor       |                                                             |
 | FontColor       |                                                             |
 | Action          | Function callback on content click                          |
 | Tooltip         | Tooltip for content mouse hover                             |
-
+| Height    | force a height on the content (overflow hidden always atm)    |
+| BackAttached    | Attached the background color to the text and not the content bounds. Basically the backcolor is only behind the text and not the entire bounds the content is allowed    | False |
 
 ### Structure
 | Object                          | Description                                                                                                                  |
@@ -266,7 +270,7 @@ mywindow = simplewindow.CreateWindow(
 | Window                          | The parent object                                                                                                            |
 | Window.Config                   | The main configuration object                                                                                                |
 | Window.Theme                    | Font / color information                                                                                                     |
-| Window.View[]                   | An array of views can be added to a window to give the user an option of displaying completely different sets of information |
+| Window.View[]                   | Basically tabs without a ui atm
 | Window.View.Container[]         | Each container is a grouping of text                                                                                         |
 | Window.View.Container.Content[] | Text                                                                                                                         |
 
