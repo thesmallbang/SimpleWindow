@@ -311,6 +311,7 @@ swindow.CreateWindow = function(config, theme)
             local containerCursor = {X = 0}
             local containerwidth = view.GetContainerWidth(container, size, parentBounds.Right - parentBounds.Left)
             local containerheight = 0 -- for counting height when not explicitly specified
+
             local containerbounds = {
                 Left = parentBounds.Left + containerCursor.X + left,
                 Top = parentBounds.Top
@@ -338,7 +339,8 @@ swindow.CreateWindow = function(config, theme)
             local tallestContentInRow = 0
 
             for contentIndex, content in ipairs(container.Content) do
-                local contentbounds = view.DrawContent(contentIndex, content, contentcursor, size, parentBounds)
+                local contentbounds =
+                    view.DrawContent(contentIndex, content, contentcursor, size, parentBounds, container)
 
                 if (tallestContentInRow < contentbounds.Bottom - contentbounds.Top) then
                     tallestContentInRow = contentbounds.Bottom - contentbounds.Top
@@ -369,7 +371,7 @@ swindow.CreateWindow = function(config, theme)
             return contentcursor.Y + tallestContentInRow
         end
 
-        view.DrawContent = function(contentIndex, content, cursor, size, parentBounds)
+        view.DrawContent = function(contentIndex, content, cursor, size, parentBounds, container)
             local contentheight = content.Height or (window.GetTextHeight(content.TextStyle) + 2)
             local contentbounds = {
                 Left = parentBounds.Left + cursor.X,
@@ -379,14 +381,33 @@ swindow.CreateWindow = function(config, theme)
                 contentbounds.Left + view.GetContentWidth(content, size, parentBounds.Right - parentBounds.Left)
             contentbounds.Bottom = contentbounds.Top + contentheight
 
+            if (contentbounds.Right > parentBounds.Right) then
+                contentbounds.Right = parentBounds.Right
+            end
+
             if (contentbounds.Bottom > parentBounds.Bottom) then
                 contentbounds.Bottom = parentBounds.Bottom
             end
 
+            -- now do padding
+
+            if (contentbounds.Left == contentbounds.Right) then
+                return contentbounds
+            end
+
+            local padding = content.ContentPadding or container.ContentPadding or theme.ContentPadding
+
+            local paddedBounds = {
+                Left = contentbounds.Left + padding.Left,
+                Top = contentbounds.Top + padding.Top,
+                Right = contentbounds.Right - padding.Right,
+                Bottom = contentbounds.Bottom - padding.Bottom
+            }
+
             window.DrawText {
                 Text = content.Text,
                 Alignment = content.Alignment,
-                Bounds = contentbounds,
+                Bounds = paddedBounds,
                 Tooltip = content.Tooltip,
                 BackAttached = content.BackAttached,
                 Action = content.Action,
@@ -423,6 +444,7 @@ swindow.CreateWindow = function(config, theme)
             container.Content = options.Content or {}
             container.BackColor = options.BackColor
             container.ContentSizes = options.ContentSizes
+            container.ContentPadding = options.ContentPadding or theme.ContentPadding
             if (type(container.BackColor) == 'string') then
                 container.BackColor = ColourNameToRGB(container.BackColor)
             end
@@ -470,6 +492,7 @@ swindow.CreateWindow = function(config, theme)
                 content.Action = options.Action
                 content.Tooltip = options.Tooltip
                 content.Height = options.Height
+                content.Padding = options.Padding
                 content.BackAttached = options.BackAttached
                 content.TextStyle = options.TextStyle or container.TextStyle
                 content.Alignment = options.Alignment or {X = D_CONTAINERALIGNMENT_X, Y = D_CONTAINERALIGNMENT_Y}
@@ -1034,6 +1057,8 @@ swindow.CreateTheme = function(options)
 
     theme.DefaultFont = options.Font or D_FONT
     theme.DefaultFontSize = options.FontSize or D_FONTSIZE
+
+    theme.ContentPadding = options.ContentPadding or {Left = 1, Top = 1, Right = 1, Top = 1}
 
     theme.TextStyles = {}
 

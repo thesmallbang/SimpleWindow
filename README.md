@@ -237,24 +237,26 @@ mywindow = simplewindow.CreateWindow(
 | DefaultFont     | Font name to use when nothing has been set      | Lucida Console |
 | DefaultFontSize | Font size to use when nothing has been set      | 9              |
 | TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor |
+| ContentPadding  | (Left,Top,Right,Bottom) padding between content | 1,1,1,1        |
 
 
 ##### Container Options
-| Param Name   | Description                                                  | DefaultValue |
-| ------------ | ------------------------------------------------------------ | ------------ |
-| Name         | a name for the container pretty useless atm except logging   |
-| Style        | simplewindow.ContainerStyles. (Column, Row, RowWrap)         | RowWrap      |
-| Sizes        | specify the sizes for the container at specific width states |
-| ContentSizes | default size for content at specific width states            |
-| TextStyle    | default textstyle for content                                |
-| Height       | force a height on the container (overflow hidden always atm) |
+| Param Name     | Description                                                  | DefaultValue         |
+| -------------- | ------------------------------------------------------------ | -------------------- |
+| Name           | a name for the container pretty useless atm except logging   |
+| Style          | simplewindow.ContainerStyles. (Column, Row, RowWrap)         | RowWrap              |
+| Sizes          | specify the sizes for the container at specific width states |
+| ContentSizes   | default size for content at specific width states            |
+| TextStyle      | default textstyle for content                                |
+| Height         | force a height on the container (overflow hidden always atm) |
+| ContentPadding | (Left,Top,Right,Bottom) padding between content              | Theme.ContentPadding |
 
 ##### Content Options
-| Param Name      | Description                                                                                                                                                            | DefaultValue  |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Id              | unique id for the content, used in callbacks from links etc                                                                                                            | Random        |
+| Param Name      | Description                                                                                                                                                            | DefaultValue             |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Id              | unique id for the content, used in callbacks from links etc                                                                                                            | Random                   |
 | Text            | What text is in the content                                                                                                                                            |
-| Alignment.(X,Y) | simplewindow.Alignments.(Start,Center,End)                                                                                                                             | Start, Center |
+| Alignment.(X,Y) | simplewindow.Alignments.(Start,Center,End)                                                                                                                             | Start, Center            |
 | TextStyle       |                                                                                                                                                                        |
 | Sizes           |                                                                                                                                                                        |
 | BackColor       |                                                                                                                                                                        |
@@ -262,7 +264,8 @@ mywindow = simplewindow.CreateWindow(
 | Action          | Function callback on content click                                                                                                                                     |
 | Tooltip         | Tooltip for content mouse hover                                                                                                                                        |
 | Height          | force a height on the content (overflow hidden always atm)                                                                                                             |
-| BackAttached    | Attached the background color to the text and not the content bounds. Basically the backcolor is only behind the text and not the entire bounds the content is allowed | False         |
+| BackAttached    | Attached the background color to the text and not the content bounds. Basically the backcolor is only behind the text and not the entire bounds the content is allowed | False                    |
+| Padding         | (Left,Top,Right,Bottom) padding between content                                                                                                                        | Container.ContentPadding |
 
 ### Structure
 | Object                          | Description                          |
