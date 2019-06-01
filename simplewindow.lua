@@ -353,11 +353,11 @@ swindow.CreateWindow = function(config, theme)
             end
             containerbounds.Right = containerbounds.Left + containerwidth
 
-            window.DrawText {
-                Text = '',
-                Bounds = containerbounds,
-                BackColor = container.BackColor or math.random(1, 30000)
-            }
+            -- window.DrawText {
+            --     Text = '',
+            --     Bounds = containerbounds,
+            --     BackColor = container.BackColor or math.random(1, 30000)
+            -- }
 
             local height = view.DrawContents(container, containerCursor.X, size, containerbounds)
             containerbounds.Bottom = containerbounds.Top + (container.Height or height)
