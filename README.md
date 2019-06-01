@@ -251,6 +251,8 @@ mywindow = simplewindow.CreateWindow(
 | Height         | force a height on the container (overflow hidden always atm) |
 | ContentPadding | (Left,Top,Right,Bottom) padding between content              | Theme.ContentPadding |
 
+*ContentPadding is really more of a ContentMargin atm*
+
 ##### Content Options
 | Param Name      | Description                                                                                                                                                            | DefaultValue             |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
