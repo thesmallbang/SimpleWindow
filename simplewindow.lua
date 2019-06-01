@@ -111,8 +111,7 @@ swindow.CreateWindow = function(config, theme)
             movingPositions = {X = 0, Y = 0},
             resizePositions = {X = 0, Y = 0},
             fontsLoaded = false,
-            contentTop = 10,
-            contentLeft = 10,
+            contentTop = 0,
             hasPaintBuffer = false
         }
     }
@@ -284,10 +283,10 @@ swindow.CreateWindow = function(config, theme)
         view.DrawContainers = function()
             local cursor = {X = 0}
             local viewbounds = {
-                Left = window.__state.contentLeft,
-                Top = window.__state.contentTop,
-                Right = (window.Config.Width - window.__state.contentLeft),
-                Bottom = (window.Config.Height - window.__state.contentLeft)
+                Left = theme.BorderWidth + theme.BodyPadding.Left,
+                Top = window.__state.contentTop + theme.BodyPadding.Top,
+                Right = (window.Config.Width - theme.BorderWidth) - theme.BodyPadding.Right,
+                Bottom = (window.Config.Height - theme.BorderWidth) - theme.BodyPadding.Bottom
             }
 
             local size = view.QuerySize()
@@ -314,7 +313,7 @@ swindow.CreateWindow = function(config, theme)
                     -- check if the next container needs to wrap
                     local nextcontainer = view.Containers[containerIndex + 1]
                     if (nextcontainer ~= nil) then
-                        local nextwidth = view.GetContainerWidth(nextcontainer, size, bounds.Right - bounds.Left)
+                        local nextwidth = view.GetContainerWidth(nextcontainer, size, (bounds.Right - bounds.Left))
                         if ((cursor.X + nextwidth) >= bounds.Right) then
                             cursor.X = 0
                             bounds.Top = furthestYInRow
@@ -340,24 +339,25 @@ swindow.CreateWindow = function(config, theme)
 
         view.DrawContainer = function(containerIndex, container, left, size, parentBounds)
             local containerCursor = {X = 0}
-            local containerwidth = view.GetContainerWidth(container, size, parentBounds.Right - parentBounds.Left)
+            local containerwidth = view.GetContainerWidth(container, size, (parentBounds.Right - parentBounds.Left))
             local containerheight = 0 -- for counting height when not explicitly specified
 
             local containerbounds = {
                 Left = parentBounds.Left + containerCursor.X + left,
                 Top = parentBounds.Top
             }
+
             containerbounds.Bottom = containerbounds.Top + (container.Height or parentBounds.Bottom)
             if (containerbounds.Bottom > parentBounds.Bottom) then
                 containerbounds.Bottom = parentBounds.Bottom
             end
             containerbounds.Right = containerbounds.Left + containerwidth
 
-            -- window.DrawText {
-            --     Text = container.Name,
-            --     Bounds = containerbounds,
-            --    -- BackColor = container.BackColor or math.random(1, 30000)
-            -- }
+            window.DrawText {
+                Text = '',
+                Bounds = containerbounds,
+                BackColor = container.BackColor or math.random(1, 30000)
+            }
 
             local height = view.DrawContents(container, containerCursor.X, size, containerbounds)
             containerbounds.Bottom = containerbounds.Top + (container.Height or height)
@@ -378,17 +378,22 @@ swindow.CreateWindow = function(config, theme)
                 end
 
                 contentcursor.X = contentcursor.X + (contentbounds.Right - contentbounds.Left) -- + margin etc etc
-
+                print(contentbounds.Right - contentbounds.Left)
                 -- check if the next container needs to wrap
                 local nextcontent = container.Content[contentIndex + 1]
                 if (nextcontent ~= nil) then
+                    local padding = nextcontent.Padding or container.ContentPadding or theme.ContentPadding
+
                     local nextwidth =
-                        view.GetContentWidth(nextcontent, size, parentBounds.Right - parentBounds.Left) - 1
+                        view.GetContentWidth(nextcontent, size, (parentBounds.Right) - (parentBounds.Left)) - 1
                     -- had to add this -1 .. that means... something is off...
 
                     if (parentBounds.Left + (contentcursor.X + nextwidth) > parentBounds.Right) then
+                        print('parent right ' .. parentBounds.Right)
+                        print('next right ' .. parentBounds.Left + (contentcursor.X + nextwidth))
+
                         contentcursor.X = 0
-                        contentcursor.Y = contentcursor.Y + tallestContentInRow
+                        contentcursor.Y = contentcursor.Y + tallestContentInRow - 1
                         tallestContentInRow = 0
                     end
                 end
@@ -403,33 +408,49 @@ swindow.CreateWindow = function(config, theme)
         end
 
         view.DrawContent = function(contentIndex, content, cursor, size, parentBounds, container)
-            local contentheight = content.Height or (window.GetTextHeight(content.TextStyle) + 2)
+            local contentheight = content.Height or (window.GetTextHeight(content.TextStyle))
+            local padding = content.Padding or container.ContentPadding or theme.ContentPadding
+
             local contentbounds = {
                 Left = parentBounds.Left + cursor.X,
                 Top = parentBounds.Top + cursor.Y
             }
-            contentbounds.Right =
-                contentbounds.Left + view.GetContentWidth(content, size, parentBounds.Right - parentBounds.Left)
-            contentbounds.Bottom = contentbounds.Top + contentheight
 
-            if (contentbounds.Right > parentBounds.Right) then
-                contentbounds.Right = parentBounds.Right
-            end
+            local contentwidth = view.GetContentWidth(content, size, (parentBounds.Right) - (parentBounds.Left))
 
-            if (contentbounds.Bottom > parentBounds.Bottom) then
-                contentbounds.Bottom = parentBounds.Bottom
-            end
-
-            -- now do padding
-
-            if (contentbounds.Left == contentbounds.Right) then
+            if (contentwidth == 0) then
+                contentbounds.Bottom = contentbounds.Top
+                contentbounds.Right = contentbounds.Left
                 return contentbounds
             end
+
+            if (contentbounds.Left == contentbounds.Right) then
+                print('returned early..')
+                return contentbounds
+            end
+
+            contentbounds.Right = (contentbounds.Left + contentwidth)
+            contentbounds.Bottom = contentbounds.Top + padding.Top + contentheight + padding.Bottom
+
+            -- for testing so i can see =)
+            -- window.DrawText {
+            --     Text = '',
+            --     Bounds = contentbounds,
+            --     BackColor = math.random(1, 100000)
+            -- }
+
+            -- adjust for our text by the padding
+            -- move in x/y and shrink right/bottom
+            local textbounds = {}
+            textbounds.Left = contentbounds.Left + padding.Left
+            textbounds.Top = contentbounds.Top + padding.Top
+            textbounds.Right = contentbounds.Right - padding.Right
+            textbounds.Bottom = contentbounds.Bottom - padding.Bottom
 
             window.DrawText {
                 Text = content.Text,
                 Alignment = content.Alignment,
-                Bounds = contentbounds,
+                Bounds = textbounds,
                 Tooltip = content.Tooltip,
                 BackAttached = content.BackAttached,
                 Action = content.Action,
@@ -482,15 +503,6 @@ swindow.CreateWindow = function(config, theme)
                     {Name = 'xs', Percent = 100},
                     {Name = 'md', Percent = 50},
                     {Name = 'xl', Percent = 25}
-                }
-
-            container.Bounds =
-                options.Bounds or
-                {
-                    Left = window.Theme.BorderWidth + window.Theme.BodyPadding.Left,
-                    Top = window.Theme.BorderWidth + window.Theme.BodyPadding.Top,
-                    Right = window.Config.Width - (window.Theme.BorderWidth + window.Theme.BodyPadding.Right),
-                    Bottom = window.Config.Height - (window.Theme.BorderWidth + window.Theme.BodyPadding.Bottom)
                 }
 
             container.AddContent = function(options)
@@ -850,9 +862,8 @@ swindow.CreateWindow = function(config, theme)
                 )
             end
 
-            window.__state.contentTop =
-                titleBounds.Bottom + theme.TitlePadding.Bottom + (theme.BorderWidth) + theme.BodyPadding.Top
-            window.__state.contentLeft = theme.BorderWidth + theme.BodyPadding.Left + theme.TitlePadding.Left
+            window.__state.contentTop = titleBounds.Bottom + theme.TitlePadding.Bottom + (theme.BorderWidth)
+            window.__state.contentLeft = theme.BorderWidth --+ theme.BodyPadding.Left + theme.TitlePadding.Left
         end
     end
 
