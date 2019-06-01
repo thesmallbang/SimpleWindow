@@ -395,19 +395,10 @@ swindow.CreateWindow = function(config, theme)
                 return contentbounds
             end
 
-            local padding = content.ContentPadding or container.ContentPadding or theme.ContentPadding
-
-            local paddedBounds = {
-                Left = contentbounds.Left + padding.Left,
-                Top = contentbounds.Top + padding.Top,
-                Right = contentbounds.Right - padding.Right,
-                Bottom = contentbounds.Bottom - padding.Bottom
-            }
-
             window.DrawText {
                 Text = content.Text,
                 Alignment = content.Alignment,
-                Bounds = paddedBounds,
+                Bounds = contentbounds,
                 Tooltip = content.Tooltip,
                 BackAttached = content.BackAttached,
                 Action = content.Action,
@@ -458,21 +449,39 @@ swindow.CreateWindow = function(config, theme)
                 options.Sizes or
                 {
                     {Name = 'xs', Percent = 100},
-                    {Name = 'sm', Percent = 100},
                     {Name = 'md', Percent = 50},
-                    {Name = 'lg', Percent = 50},
                     {Name = 'xl', Percent = 25}
                 }
+
             container.GetSizePercent = function(name)
-                local potential = nil
+                -- can we just find a straight up match first?
                 for _, s in ipairs(container.Sizes) do
                     if (s.Name == name) then
                         return s.Percent
-                    else
-                        potential = s.Percent
                     end
                 end
-                return potential
+
+                -- get a list of all the sizes available
+                -- searching for lg ..
+
+                -- viewconf -- containerconf    --
+                ------------------------------------
+                -- xs   -- xs 100           -- matches view and container so add to matches table
+                -- sm   --              -- nope
+                -- md   -- md 50        -- matches view and container so add to matches table
+                -- lg   --              -- matches search size return last matches.percent
+                -- xl   --
+                local lastmatch = {}
+                for _, vs in ipairs(view.Sizes) do
+                    for _, cs in ipairs(container.Sizes) do
+                        if (vs.Name == cs.Name) then
+                            lastmatch = cs
+                        end
+                    end
+                    if (vs.Name == name) then
+                        return lastmatch.Percent
+                    end
+                end
             end
             container.Bounds =
                 options.Bounds or
@@ -504,16 +513,36 @@ swindow.CreateWindow = function(config, theme)
                             {Name = 'xs', Percent = 100}
                         })
                 content.GetSizePercent = function(name)
-                    local potential = nil
+                    -- can we just find a straight up match first?
                     for _, s in ipairs(content.Sizes) do
                         if (s.Name == name) then
                             return s.Percent
-                        else
-                            potential = s.Percent
                         end
                     end
-                    return potential
+
+                    -- get a list of all the sizes available
+                    -- searching for lg ..
+
+                    -- viewconf -- containerconf    --
+                    ------------------------------------
+                    -- xs   -- xs 100           -- matches view and container so add to matches table
+                    -- sm   --              -- nope
+                    -- md   -- md 50        -- matches view and container so add to matches table
+                    -- lg   --              -- matches search size return last matches.percent
+                    -- xl   --
+                    local lastmatch = {}
+                    for _, vs in ipairs(view.Sizes) do
+                        for _, cs in ipairs(content.Sizes) do
+                            if (vs.Name == cs.Name) then
+                                lastmatch = cs
+                            end
+                        end
+                        if (vs.Name == name) then
+                            return lastmatch.Percent
+                        end
+                    end
                 end
+
                 if (content.TextStyle == nil or type(content.TextStyle) == 'string') then
                     content.TextStyle = window.GetTextStyle(content.TextStyle)
                 end
