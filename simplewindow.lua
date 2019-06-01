@@ -487,10 +487,10 @@ swindow.CreateWindow = function(config, theme)
             container.Bounds =
                 options.Bounds or
                 {
-                    Left = window.Config.BorderWidth + window.Config.BodyPadding.Left,
-                    Top = window.Config.BorderWidth + window.Config.BodyPadding.Top,
-                    Right = window.Config.Width - (window.Config.BorderWidth + window.Config.BodyPadding.Right),
-                    Bottom = window.Config.Height - (window.Config.BorderWidth + window.Config.BodyPadding.Bottom)
+                    Left = window.Theme.BorderWidth + window.Theme.BodyPadding.Left,
+                    Top = window.Theme.BorderWidth + window.Theme.BodyPadding.Top,
+                    Right = window.Config.Width - (window.Theme.BorderWidth + window.Theme.BodyPadding.Right),
+                    Bottom = window.Config.Height - (window.Theme.BorderWidth + window.Theme.BodyPadding.Bottom)
                 }
 
             container.AddContent = function(options)
@@ -594,10 +594,10 @@ swindow.CreateWindow = function(config, theme)
             0,
             drawConfig.Width,
             drawConfig.Height,
-            window.Theme.BorderColor,
+            theme.BorderColor,
             6,
-            drawConfig.BorderWidth,
-            window.Theme.BackColor
+            theme.BorderWidth,
+            theme.BackColor
         )
 
         -- draw our window title
@@ -610,9 +610,9 @@ swindow.CreateWindow = function(config, theme)
 
             local textHeight = window.GetTextHeight(tstyle)
             local titleBounds = {
-                Left = drawConfig.BorderWidth,
-                Top = drawConfig.BorderWidth,
-                Right = window.Config.Width - drawConfig.BorderWidth
+                Left = theme.BorderWidth,
+                Top = theme.BorderWidth,
+                Right = drawConfig.Width - theme.BorderWidth
             }
 
             titleBounds.Bottom = titleBounds.Top + textHeight
@@ -623,37 +623,37 @@ swindow.CreateWindow = function(config, theme)
             local colorBR =
                 BackToHex(
                 {
-                    ((b or 0) * .4),
-                    ((g or 0) * .4),
-                    ((r or 0) * .4)
+                    ((b or 0) * .6),
+                    ((g or 0) * .6),
+                    ((r or 0) * .6)
                 }
             )
 
             local textBounds = titleBounds
-            textBounds.Top = textBounds.Top + drawConfig.TitlePadding.Top
-            textBounds.Left = textBounds.Left + drawConfig.TitlePadding.Left
-            textBounds.Right = textBounds.Right - drawConfig.TitlePadding.Right
-            textBounds.Bottom = textBounds.Bottom + drawConfig.TitlePadding.Bottom
+            textBounds.Top = textBounds.Top + theme.TitlePadding.Top
+            textBounds.Left = textBounds.Left + theme.TitlePadding.Left
+            textBounds.Right = textBounds.Right - theme.TitlePadding.Right
+            textBounds.Bottom = textBounds.Bottom + theme.TitlePadding.Bottom
 
             local drawnPosition =
                 window.DrawText {
                 Text = title,
-                BackColor = drawConfig.TitleBackColor,
+                BackColor = theme.TitleBackColor,
                 Bounds = textBounds,
-                Alignment = {X = drawConfig.TitleAlignment, Y = swindow.Alignments.Center},
+                Alignment = {X = theme.TitleAlignment, Y = swindow.Alignments.Center},
                 TextStyle = tstyle
             }
 
             -- -- draw title line with darker shade
             WindowLine(
                 drawConfig.Id,
-                drawConfig.BorderWidth + (drawConfig.BorderWidth / 2),
-                titleBounds.Bottom + drawConfig.TitlePadding.Bottom + (drawConfig.BorderWidth / 2),
-                (drawConfig.Width - drawConfig.BorderWidth) - (drawConfig.BorderWidth / 2),
-                titleBounds.Bottom + drawConfig.TitlePadding.Bottom + (drawConfig.BorderWidth / 2),
+                theme.BorderWidth + (theme.BorderWidth / 2),
+                titleBounds.Bottom + theme.TitlePadding.Bottom + (theme.BorderWidth / 2),
+                (drawConfig.Width - theme.BorderWidth) - (theme.BorderWidth / 2),
+                titleBounds.Bottom + theme.TitlePadding.Bottom + (theme.BorderWidth / 2),
                 colorBR,
                 0x0100,
-                drawConfig.BorderWidth
+                theme.BorderWidth
             )
 
             _G['TitleMouseDown' .. window.Config.Id] = function(flags)
@@ -727,30 +727,30 @@ swindow.CreateWindow = function(config, theme)
                 -- draw our resizer
                 WindowLine(
                     drawConfig.Id,
-                    drawConfig.Width - (drawConfig.BorderWidth),
-                    drawConfig.Height - (drawConfig.BorderWidth) - 2,
-                    drawConfig.Width - (drawConfig.BorderWidth) - 2,
-                    drawConfig.Height - (drawConfig.BorderWidth),
+                    drawConfig.Width - (theme.BorderWidth),
+                    drawConfig.Height - (theme.BorderWidth) - 2,
+                    drawConfig.Width - (theme.BorderWidth) - 2,
+                    drawConfig.Height - (theme.BorderWidth),
                     window.Theme.BorderColor,
                     0 and 0x1000,
                     1
                 )
                 WindowLine(
                     drawConfig.Id,
-                    drawConfig.Width - (drawConfig.BorderWidth),
-                    drawConfig.Height - (drawConfig.BorderWidth) - 5,
-                    drawConfig.Width - (drawConfig.BorderWidth) - 5,
-                    drawConfig.Height - (drawConfig.BorderWidth),
+                    drawConfig.Width - (theme.BorderWidth),
+                    drawConfig.Height - (theme.BorderWidth) - 5,
+                    drawConfig.Width - (theme.BorderWidth) - 5,
+                    drawConfig.Height - (theme.BorderWidth),
                     window.Theme.BorderColor,
                     0 and 0x1000,
                     1
                 )
                 WindowLine(
                     drawConfig.Id,
-                    drawConfig.Width - (drawConfig.BorderWidth),
-                    drawConfig.Height - (drawConfig.BorderWidth) - 8,
-                    drawConfig.Width - (drawConfig.BorderWidth) - 8,
-                    drawConfig.Height - (drawConfig.BorderWidth),
+                    drawConfig.Width - (theme.BorderWidth),
+                    drawConfig.Height - (theme.BorderWidth) - 8,
+                    drawConfig.Width - (theme.BorderWidth) - 8,
+                    drawConfig.Height - (theme.BorderWidth),
                     window.Theme.BorderColor,
                     0 and 0x1000,
                     1
@@ -758,10 +758,10 @@ swindow.CreateWindow = function(config, theme)
 
                 WindowLine(
                     drawConfig.Id,
-                    drawConfig.Width - (drawConfig.BorderWidth),
-                    drawConfig.Height - (drawConfig.BorderWidth) - 11,
-                    drawConfig.Width - (drawConfig.BorderWidth) - 11,
-                    drawConfig.Height - (drawConfig.BorderWidth),
+                    drawConfig.Width - (theme.BorderWidth),
+                    drawConfig.Height - (theme.BorderWidth) - 11,
+                    drawConfig.Width - (theme.BorderWidth) - 11,
+                    drawConfig.Height - (theme.BorderWidth),
                     window.Theme.BorderColor,
                     0 and 0x1000,
                     1
@@ -790,7 +790,7 @@ swindow.CreateWindow = function(config, theme)
                         drawConfig.Height,
                         window.Theme.BorderColor,
                         0,
-                        drawConfig.BorderWidth,
+                        theme.BorderWidth,
                         ColourNameToRGB('gold'),
                         6
                     )
@@ -828,10 +828,10 @@ swindow.CreateWindow = function(config, theme)
                 WindowAddHotspot(
                     drawConfig.Id,
                     'resizehs',
-                    drawConfig.Width - (drawConfig.BorderWidth) - 12,
-                    drawConfig.Height - (drawConfig.BorderWidth) - 12,
-                    drawConfig.Width - (drawConfig.BorderWidth),
-                    drawConfig.Height - (drawConfig.BorderWidth),
+                    drawConfig.Width - (theme.BorderWidth) - 12,
+                    drawConfig.Height - (theme.BorderWidth) - 12,
+                    drawConfig.Width - (theme.BorderWidth),
+                    drawConfig.Height - (theme.BorderWidth),
                     '',
                     '',
                     'ResizeMouseDown' .. window.Config.Id,
@@ -851,10 +851,8 @@ swindow.CreateWindow = function(config, theme)
             end
 
             window.__state.contentTop =
-                titleBounds.Bottom + drawConfig.TitlePadding.Bottom + (drawConfig.BorderWidth) +
-                drawConfig.BodyPadding.Top
-            window.__state.contentLeft =
-                drawConfig.BorderWidth + drawConfig.BodyPadding.Left + drawConfig.TitlePadding.Left
+                titleBounds.Bottom + theme.TitlePadding.Bottom + (theme.BorderWidth) + theme.BodyPadding.Top
+            window.__state.contentLeft = theme.BorderWidth + theme.BodyPadding.Left + theme.TitlePadding.Left
         end
     end
 
@@ -1030,6 +1028,12 @@ swindow.CreateTheme = function(options)
     local theme = {}
     options = options or {}
 
+    theme.BorderWidth = options.BorderWidth or D_BORDERWIDTH
+    theme.TitleAlignment = options.TitleAlignment or D_TITLEALIGNMENT
+    theme.TitleBackColor = options.TitleBackColor
+    theme.TitlePadding = options.TitlePadding or {Left = 2, Top = 2, Right = 2, Bottom = 2}
+    theme.BodyPadding = options.BodyPadding or {Left = 5, Top = 5, Right = 5, Bottom = 5}
+
     if (options.BackColor ~= nil and type(options.BackColor) == 'string') then
         options.BackColor = ColourNameToRGB(options.BackColor)
     end
@@ -1090,12 +1094,7 @@ swindow.CreateConfig = function(options)
     config.Height = options.Height or D_HEIGHT
     config.Left = options.Left or D_LEFT
     config.Top = options.Top or D_TOP
-    config.BorderWidth = options.BorderWidth or D_BORDERWIDTH
     config.Title = options.Title or D_TITLE
-    config.TitleAlignment = options.TitleAlignment or D_TITLEALIGNMENT
-    config.TitleBackColor = options.TitleBackColor
-    config.BodyPadding = options.BodyPadding or {Left = 5, Top = 5, Right = 5, Bottom = 5}
-    config.TitlePadding = options.TitlePadding or {Left = 2, Top = 2, Right = 2, Bottom = 2}
     config.UpdateInterval = options.UpdateInterval or D_UPDATEINTERVAL
     config.Layer = options.Layer or D_LAYER
 

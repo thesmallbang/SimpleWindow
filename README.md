@@ -208,36 +208,36 @@ mywindow = simplewindow.CreateWindow(
 
 
 ##### Configuration Options
-| Param Name     | Description                                                                      | DefaultValue |
-| -------------- | -------------------------------------------------------------------------------- | ------------ |
-| Id             | A unique id for your window.                                                     | Random       |
-| UpdateInterval | How often should the callback for refreshing data and drawing occur              | 1 (second)   |
-| Layer          | The higher the layer the more likely to draw ontop of other windows              | 100          |
-| Title          | Text to display at the top of your window.                                       |
-| TitleAlignment | simplewindow.Alignments.(Start,Center,End)  (refers to x align atm)              | Start        |
-| Width          | The default width of the window                                                  | 300          |
-| Height         | The default height of the window                                                 | 300          |
-| Left           | The distance from the left side of the screen                                    |
-| Top            | The distance from the top of the screen                                          |
-| AllowResize    | Allow the window to be resized by the user                                       | true         |
-| SaveState      | Automatically save/load the last size/position the window was in                 | true         |
-| --             | These settings will be moved to theme soon                                       |
-| BorderWidth    | How wide of the border pen. Yes it should be in theme but.. not yet              |
-| BodyPadding    | (Left,Top,Right,Bottom) The content in the view is what distance from the border |
-| TitlePadding   | (Left,Top,Right,Bottom) The title what distance from the borders                 |
+| Param Name     | Description                                                         | DefaultValue |
+| -------------- | ------------------------------------------------------------------- | ------------ |
+| Id             | A unique id for your window.                                        | Random       |
+| UpdateInterval | How often should the callback for refreshing data and drawing occur | 1 (second)   |
+| Layer          | The higher the layer the more likely to draw ontop of other windows | 100          |
+| Title          | Text to display at the top of your window.                          |
+| TitleAlignment | simplewindow.Alignments.(Start,Center,End)  (refers to x align atm) | Start        |
+| Width          | The default width of the window                                     | 300          |
+| Height         | The default height of the window                                    | 300          |
+| Left           | The distance from the left side of the screen                       |
+| Top            | The distance from the top of the screen                             |
+| AllowResize    | Allow the window to be resized by the user                          | true         |
+| SaveState      | Automatically save/load the last size/position the window was in    | true         |
 
 
 
 
 ##### Theme Options
-| Param Name      | Description                                     | DefaultValue   |
-| --------------- | ----------------------------------------------- | -------------- |
-| BackColor       | string or number for window background color    | Black          |
-| BorderColor     | string or number for window border color        | Teal           |
-| DefaultFont     | Font name to use when nothing has been set      | Lucida Console |
-| DefaultFontSize | Font size to use when nothing has been set      | 9              |
-| TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor |
-| ContentPadding  | (Left,Top,Right,Bottom) padding between content | 1,1,1,1        |
+| Param Name      | Description                                                                      | DefaultValue   |
+| --------------- | -------------------------------------------------------------------------------- | -------------- |
+| BackColor       | string or number for window background color                                     | Black          |
+| BorderColor     | string or number for window border color                                         | Teal           |
+| DefaultFont     | Font name to use when nothing has been set                                       | Lucida Console |
+| DefaultFontSize | Font size to use when nothing has been set                                       | 9              |
+| TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor                                  |
+| ContentPadding  | (Left,Top,Right,Bottom) padding between content                                  | 1,1,1,1        |
+| BorderWidth     | How wide of the border pen. Yes it should be in theme but.. not yet              |
+| BodyPadding     | (Left,Top,Right,Bottom) The content in the view is what distance from the border |
+| TitlePadding    | (Left,Top,Right,Bottom) The title what distance from the borders                 |
+| TitleBackColor  | Backcolor on title bar                                                           |
 
 
 ##### Container Options
