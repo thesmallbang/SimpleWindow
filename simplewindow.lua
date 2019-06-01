@@ -1051,7 +1051,7 @@ swindow.CreateTheme = function(options)
     theme.DefaultFont = options.Font or D_FONT
     theme.DefaultFontSize = options.FontSize or D_FONTSIZE
 
-    theme.ContentPadding = options.ContentPadding or {Left = 1, Top = 1, Right = 1, Top = 1}
+    theme.ContentPadding = options.ContentPadding or {Left = 1, Top = 1, Right = 1, Bottom = 1}
 
     theme.TextStyles = {}
 
