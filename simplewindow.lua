@@ -378,7 +378,7 @@ swindow.CreateWindow = function(config, theme)
                 end
 
                 contentcursor.X = contentcursor.X + (contentbounds.Right - contentbounds.Left) -- + margin etc etc
-                print(contentbounds.Right - contentbounds.Left)
+
                 -- check if the next container needs to wrap
                 local nextcontent = container.Content[contentIndex + 1]
                 if (nextcontent ~= nil) then
@@ -389,9 +389,6 @@ swindow.CreateWindow = function(config, theme)
                     -- had to add this -1 .. that means... something is off...
 
                     if (parentBounds.Left + (contentcursor.X + nextwidth) > parentBounds.Right) then
-                        print('parent right ' .. parentBounds.Right)
-                        print('next right ' .. parentBounds.Left + (contentcursor.X + nextwidth))
-
                         contentcursor.X = 0
                         contentcursor.Y = contentcursor.Y + tallestContentInRow - 1
                         tallestContentInRow = 0
@@ -421,11 +418,6 @@ swindow.CreateWindow = function(config, theme)
             if (contentwidth == 0) then
                 contentbounds.Bottom = contentbounds.Top
                 contentbounds.Right = contentbounds.Left
-                return contentbounds
-            end
-
-            if (contentbounds.Left == contentbounds.Right) then
-                print('returned early..')
                 return contentbounds
             end
 
