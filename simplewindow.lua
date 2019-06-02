@@ -63,12 +63,13 @@ function ColorToRGBHex(color)
     return string.format('#%06x', high + mid + low)
 end
 
-function MergeRGBToHex(rgb)
+function swindow.MergeRGB(rgb)
     local hexadecimal = '0X'
 
-    for key, value in pairs(rgb) do
-        local hex = ''
+    for i = #rgb, 1, -1 do
+        local value = rgb[i]
 
+        local hex = ''
         while (value > 0) do
             local index = math.fmod(value, 16) + 1
             value = math.floor(value / 16)
@@ -84,24 +85,25 @@ function MergeRGBToHex(rgb)
         hexadecimal = hexadecimal .. hex
     end
 
-    return hexadecimal
+    for key, value in pairs(rgb) do
+    end
+
+    return tonumber(hexadecimal, 16)
 end
 
-function ColorAdjust(color, percent)
+function swindow.ColorAdjust(color, percent)
     if (type(color) == 'string') then
         color = ColourNameToRGB(color)
     end
 
     local r, g, b = SplitRGB(ColorToRGBHex(color))
-    return tonumber(
-        MergeRGBToHex(
-            {
-                (b or 0) * (1 + percent),
-                (g or 0) * (1 + percent),
-                (r or 0) * (1 + percent)
-            },
-            16
-        )
+    return swindow.MergeRGB(
+        {
+            (r or 0) * (1 + percent),
+            (g or 0) * (1 + percent),
+            (b or 0) * (1 + percent)
+        },
+        16
     )
 end
 
@@ -501,6 +503,7 @@ swindow.CreateWindow = function(config, theme)
             container.Content = options.Content or {}
             container.BackColor = options.BackColor
             container.ContentSizes = options.ContentSizes
+            container.ContentPadding = options.ContentPadding or theme.ContentPadding
             container.ContentMargin = options.ContentMargin or theme.ContentMargin
             container.ContentAlignment = options.ContentAlignment or theme.ContentAlignment
             if (type(container.BackColor) == 'string') then
@@ -650,7 +653,7 @@ swindow.CreateWindow = function(config, theme)
             titleBounds.Bottom = titleBounds.Top + textHeight
 
             -- shade it darker
-            local colorBR = ColorAdjust(theme.BorderColor, -.3)
+            local colorBR = swindow.ColorAdjust(theme.BorderColor, -.3)
 
             local textBounds = titleBounds
             textBounds.Top = textBounds.Top + theme.TitleMargin.Top
@@ -1092,8 +1095,8 @@ swindow.CreateTheme = function(options)
     theme.BackColor = options.BackColor or ColourNameToRGB('black')
     theme.BorderColor = options.BorderColor or ColourNameToRGB('teal')
 
-    theme.DefaultFont = options.Font or D_FONT
-    theme.DefaultFontSize = options.FontSize or D_FONTSIZE
+    theme.DefaultFont = options.DefaultFont or D_FONT
+    theme.DefaultFontSize = options.DefaultFontSize or D_FONTSIZE
 
     theme.TextStyles = {}
 
