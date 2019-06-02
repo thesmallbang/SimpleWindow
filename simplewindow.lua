@@ -54,7 +54,7 @@ function SplitRGB(hx)
     return tonumber('0x' .. hx:sub(1, 2)), tonumber('0x' .. hx:sub(3, 4)), tonumber('0x' .. hx:sub(5, 6))
 end
 
-function ColourNameToRGBHex(color)
+function ColorToRGBHex(color)
     low = math.floor(color / 65536)
     color = color - low * 65536
     mid = math.floor(color / 256) * 256
@@ -63,7 +63,7 @@ function ColourNameToRGBHex(color)
     return string.format('#%06x', high + mid + low)
 end
 
-function BackToHex(rgb)
+function MergeRGBToHex(rgb)
     local hexadecimal = '0X'
 
     for key, value in pairs(rgb) do
@@ -85,6 +85,24 @@ function BackToHex(rgb)
     end
 
     return hexadecimal
+end
+
+function ColorAdjust(color, percent)
+    if (type(color) == 'string') then
+        color = ColourNameToRGB(color)
+    end
+
+    local r, g, b = SplitRGB(ColorToRGBHex(color))
+    return tonumber(
+        MergeRGBToHex(
+            {
+                (b or 0) * (1 + percent),
+                (g or 0) * (1 + percent),
+                (r or 0) * (1 + percent)
+            },
+            16
+        )
+    )
 end
 
 swindow.Paint = function(win)
@@ -283,10 +301,10 @@ swindow.CreateWindow = function(config, theme)
         view.DrawContainers = function()
             local cursor = {X = 0}
             local viewbounds = {
-                Left = theme.BorderWidth + theme.BodyPadding.Left,
-                Top = window.__state.contentTop + theme.BodyPadding.Top,
-                Right = (window.Config.Width - theme.BorderWidth) - theme.BodyPadding.Right,
-                Bottom = (window.Config.Height - theme.BorderWidth) - theme.BodyPadding.Bottom
+                Left = theme.BorderWidth + theme.BodyMargin.Left,
+                Top = window.__state.contentTop + theme.BodyMargin.Top,
+                Right = (window.Config.Width - theme.BorderWidth) - theme.BodyMargin.Right,
+                Bottom = (window.Config.Height - theme.BorderWidth) - theme.BodyMargin.Bottom
             }
 
             local size = view.QuerySize()
@@ -353,11 +371,13 @@ swindow.CreateWindow = function(config, theme)
             end
             containerbounds.Right = containerbounds.Left + containerwidth
 
+            --  if (container.BackColor) then
             -- window.DrawText {
             --     Text = '',
             --     Bounds = containerbounds,
             --     BackColor = container.BackColor or math.random(1, 30000)
             -- }
+            --  end
 
             local height = view.DrawContents(container, containerCursor.X, size, containerbounds)
             containerbounds.Bottom = containerbounds.Top + (container.Height or height)
@@ -382,15 +402,13 @@ swindow.CreateWindow = function(config, theme)
                 -- check if the next container needs to wrap
                 local nextcontent = container.Content[contentIndex + 1]
                 if (nextcontent ~= nil) then
-                    local padding = nextcontent.Padding or container.ContentPadding or theme.ContentPadding
-
                     local nextwidth =
                         view.GetContentWidth(nextcontent, size, (parentBounds.Right) - (parentBounds.Left)) - 1
                     -- had to add this -1 .. that means... something is off...
 
                     if (parentBounds.Left + (contentcursor.X + nextwidth) > parentBounds.Right) then
                         contentcursor.X = 0
-                        contentcursor.Y = contentcursor.Y + tallestContentInRow - 1
+                        contentcursor.Y = contentcursor.Y + tallestContentInRow
                         tallestContentInRow = 0
                     end
                 end
@@ -406,7 +424,8 @@ swindow.CreateWindow = function(config, theme)
 
         view.DrawContent = function(contentIndex, content, cursor, size, parentBounds, container)
             local contentheight = content.Height or (window.GetTextHeight(content.TextStyle))
-            local padding = content.Padding or container.ContentPadding or theme.ContentPadding
+            local margin = content.Margin or container.ContentMargin or theme.ContentMargin
+            local padding = (content.Padding or container.ContentPadding) or theme.ContentPadding
 
             local contentbounds = {
                 Left = parentBounds.Left + cursor.X,
@@ -422,7 +441,7 @@ swindow.CreateWindow = function(config, theme)
             end
 
             contentbounds.Right = (contentbounds.Left + contentwidth)
-            contentbounds.Bottom = contentbounds.Top + padding.Top + contentheight + padding.Bottom
+            contentbounds.Bottom = contentbounds.Top + margin.Top + contentheight + margin.Bottom --+ padding.Top + padding.Bottom
 
             -- for testing so i can see =)
             -- window.DrawText {
@@ -431,15 +450,16 @@ swindow.CreateWindow = function(config, theme)
             --     BackColor = math.random(1, 100000)
             -- }
 
-            -- adjust for our text by the padding
+            -- adjust for our text by the margin
             -- move in x/y and shrink right/bottom
             local textbounds = {}
-            textbounds.Left = contentbounds.Left + padding.Left
-            textbounds.Top = contentbounds.Top + padding.Top
-            textbounds.Right = contentbounds.Right - padding.Right
-            textbounds.Bottom = contentbounds.Bottom - padding.Bottom
+            textbounds.Left = contentbounds.Left + margin.Left
+            textbounds.Top = contentbounds.Top + margin.Top --+ padding.Top
+            textbounds.Right = (contentbounds.Right - margin.Right)
+            textbounds.Bottom = (contentbounds.Bottom - margin.Bottom) --+ padding.Bottom + padding.Top
 
-            window.DrawText {
+            local drewBounds =
+                window.DrawText {
                 Text = content.Text,
                 Alignment = content.Alignment,
                 Bounds = textbounds,
@@ -448,8 +468,10 @@ swindow.CreateWindow = function(config, theme)
                 Action = content.Action,
                 FontColor = content.FontColor,
                 BackColor = content.BackColor,
-                TextStyle = content.TextStyle
+                TextStyle = content.TextStyle,
+                Padding = content.Padding
             }
+            contentbounds.Bottom = drewBounds.Bottom
 
             return contentbounds
         end
@@ -479,7 +501,8 @@ swindow.CreateWindow = function(config, theme)
             container.Content = options.Content or {}
             container.BackColor = options.BackColor
             container.ContentSizes = options.ContentSizes
-            container.ContentPadding = options.ContentPadding or theme.ContentPadding
+            container.ContentMargin = options.ContentMargin or theme.ContentMargin
+            container.ContentAlignment = options.ContentAlignment or theme.ContentAlignment
             if (type(container.BackColor) == 'string') then
                 container.BackColor = ColourNameToRGB(container.BackColor)
             end
@@ -506,10 +529,15 @@ swindow.CreateWindow = function(config, theme)
                 content.Action = options.Action
                 content.Tooltip = options.Tooltip
                 content.Height = options.Height
-                content.Padding = options.Padding
+                content.Margin = options.Margin
+                content.Padding =
+                    options.Padding or container.ContentPadding or theme.ContentPadding or
+                    {Left = 0, Top = 0, Right = 0, Bottom = 0}
                 content.BackAttached = options.BackAttached
                 content.TextStyle = options.TextStyle or container.TextStyle
-                content.Alignment = options.Alignment or {X = D_CONTAINERALIGNMENT_X, Y = D_CONTAINERALIGNMENT_Y}
+                content.Alignment =
+                    options.Alignment or container.ContentAlignment or
+                    {X = D_CONTAINERALIGNMENT_X, Y = D_CONTAINERALIGNMENT_Y}
 
                 content.Sizes =
                     options.Sizes or
@@ -621,23 +649,14 @@ swindow.CreateWindow = function(config, theme)
 
             titleBounds.Bottom = titleBounds.Top + textHeight
 
-            local r, g, b = SplitRGB(ColourNameToRGBHex(theme.BorderColor))
-
             -- shade it darker
-            local colorBR =
-                BackToHex(
-                {
-                    ((b or 0) * .6),
-                    ((g or 0) * .6),
-                    ((r or 0) * .6)
-                }
-            )
+            local colorBR = ColorAdjust(theme.BorderColor, -.3)
 
             local textBounds = titleBounds
-            textBounds.Top = textBounds.Top + theme.TitlePadding.Top
-            textBounds.Left = textBounds.Left + theme.TitlePadding.Left
-            textBounds.Right = textBounds.Right - theme.TitlePadding.Right
-            textBounds.Bottom = textBounds.Bottom + theme.TitlePadding.Bottom
+            textBounds.Top = textBounds.Top + theme.TitleMargin.Top
+            textBounds.Left = textBounds.Left + theme.TitleMargin.Left
+            textBounds.Right = textBounds.Right - theme.TitleMargin.Right
+            textBounds.Bottom = textBounds.Bottom + theme.TitleMargin.Bottom
 
             local drawnPosition =
                 window.DrawText {
@@ -652,9 +671,9 @@ swindow.CreateWindow = function(config, theme)
             WindowLine(
                 drawConfig.Id,
                 theme.BorderWidth + (theme.BorderWidth / 2),
-                titleBounds.Bottom + theme.TitlePadding.Bottom + (theme.BorderWidth / 2),
+                titleBounds.Bottom + theme.TitleMargin.Bottom + (theme.BorderWidth / 2),
                 (drawConfig.Width - theme.BorderWidth) - (theme.BorderWidth / 2),
-                titleBounds.Bottom + theme.TitlePadding.Bottom + (theme.BorderWidth / 2),
+                titleBounds.Bottom + theme.TitleMargin.Bottom + (theme.BorderWidth / 2),
                 colorBR,
                 0x0100,
                 theme.BorderWidth
@@ -798,12 +817,13 @@ swindow.CreateWindow = function(config, theme)
                         ColourNameToRGB('gold'),
                         6
                     )
+
+                    local txt = 'X: ' .. window.Config.Width .. ' Y: ' .. window.Config.Height
+                    local textwidth = window.GetTextWidth(window.GetTextStyle(), txt)
+
                     window.DrawText {
-                        Text = 'X: ' .. window.Config.Width .. ' Y: ' .. window.Config.Height,
-                        BackColor = 'white',
-                        FontColor = 'black',
-                        TextStyle = window.GetTextStyle(),
-                        BackAttached = true,
+                        Text = txt,
+                        TextStyle = 'title',
                         Bounds = {
                             Left = 0,
                             Top = 0,
@@ -854,8 +874,8 @@ swindow.CreateWindow = function(config, theme)
                 )
             end
 
-            window.__state.contentTop = titleBounds.Bottom + theme.TitlePadding.Bottom + (theme.BorderWidth)
-            window.__state.contentLeft = theme.BorderWidth --+ theme.BodyPadding.Left + theme.TitlePadding.Left
+            window.__state.contentTop = titleBounds.Bottom + theme.TitleMargin.Bottom + (theme.BorderWidth)
+            window.__state.contentLeft = theme.BorderWidth
         end
     end
 
@@ -876,18 +896,20 @@ swindow.CreateWindow = function(config, theme)
             options.FontColor = ColourNameToRGB(options.FontColor)
         end
         options.Alignment = options.Alignment or {X = swindow.Alignments.Start, Y = swindow.Alignments.Start}
-        options.Bounds = options.Bounds or {}
+        options.Bounds = options.Bounds
+        options.Padding = options.Padding or {Left = 0, Top = 0, Right = 0, Bottom = 0}
 
-        options.Bounds.Left = options.Bounds.Left or window.__state.contentLeft
+        -- so the bounds = a border really ... it needs to be expanded to accomidate padding
+        options.Bounds.Left = (options.Bounds.Left or window.__state.contentLeft)
         options.Bounds.Top = options.Bounds.Top or window.__state.contentTop
-        options.Bounds.Right = options.Bounds.Right or window.Config.Width
-        options.Bounds.Bottom = options.Bounds.Bottom or window.Config.Height
+        options.Bounds.Right = (options.Bounds.Right or window.Config.Width)
+        options.Bounds.Bottom =
+            (options.Bounds.Bottom or window.Config.Height) + options.Padding.Bottom + options.Padding.Top
 
         if (options.BackAttached == nil) then
             options.BackAttached = false
         end
-
-        options.Text = options.Text or 'Omnium enim rerum principia parva sunt'
+        options.Text = options.Text or 'Omnium rerum principia parva sunt'
         local textWidth = window.GetTextWidth(options.TextStyle, options.Text)
         local textHeight = window.GetTextHeight(options.TextStyle)
 
@@ -895,37 +917,57 @@ swindow.CreateWindow = function(config, theme)
         local left = options.Bounds.Left
         local top = options.Bounds.Top
 
+        if (options.Alignment.X == swindow.Alignments.Start) then
+            left = options.Bounds.Left + options.Padding.Left
+        end
         if (options.Alignment.X == swindow.Alignments.Center) then
             left = options.Bounds.Left + (((options.Bounds.Right - options.Bounds.Left) / 2) - (textWidth / 2))
         end
         if (options.Alignment.X == swindow.Alignments.End) then
-            left = (options.Bounds.Right - textWidth)
+            left = (options.Bounds.Right - textWidth) - options.Padding.Right
+        end
+
+        if (options.Alignment.Y == swindow.Alignments.Start) then
+            top = options.Bounds.Top + options.Padding.Top
         end
 
         if (options.Alignment.Y == swindow.Alignments.Center) then
-            top = top + (((options.Bounds.Bottom - options.Bounds.Top) / 2) - (textHeight / 2))
+            top =
+                (((options.Bounds.Bottom - options.Bounds.Top) / 2) - (textHeight / 2)) -
+                ((options.Padding.Top + options.Padding.Bottom) / 2)
         end
         if (options.Alignment.Y == swindow.Alignments.End) then
-            top = (options.Bounds.Bottom - textHeight)
+            top = (options.Bounds.Bottom - textHeight) - options.Padding.Bottom
         end
 
+        -- centering can attempt to force this left .. we will force it back to align left basically
         if (left < options.Bounds.Left) then
-            left = options.Bounds.Left
-        end
-        if (top < options.Bounds.Top) then
-            top = options.Bounds.Top
+            left = options.Bounds.Left + options.Padding.Left
         end
 
-        local right = left + textWidth
-        local bottom = top + textHeight
+        -- again centering a huge font could mess u up here..we just align top
+        if (top < options.Bounds.Top) then
+            top = options.Bounds.Top + options.Padding.Top
+        end
+
+        local right = options.Bounds.Right - options.Padding.Right
+        local bottom = (top + textHeight) + options.Padding.Bottom
 
         if (right > options.Bounds.Right) then
             right = options.Bounds.Right
         end
 
+        if (options.Bounds.Bottom > (window.Config.Height - theme.BorderWidth) - options.Padding.Bottom) then
+            options.Bounds.Bottom = (window.Config.Height - theme.BorderWidth) - options.Padding.Bottom
+        end
+
         if (bottom > options.Bounds.Bottom) then
             bottom = options.Bounds.Bottom
         end
+
+        -- print(json.encode(options.Bounds))
+        -- print(json.encode({bottom, left, right, top}))
+        -- print('----')
 
         -- in order to support background colors we need to just draw a rect behind the text
         if (options.BackColor ~= nil or options.TextStyle.BackColor ~= nil) then
@@ -1016,7 +1058,7 @@ swindow.CreateWindow = function(config, theme)
             end
         end
 
-        return {Left = left, Top = top, Right = right, Bottom = bottom}
+        return options.Bounds
     end
 
     function window.Destroy()
@@ -1034,9 +1076,11 @@ swindow.CreateTheme = function(options)
     theme.BorderWidth = options.BorderWidth or D_BORDERWIDTH
     theme.TitleAlignment = options.TitleAlignment or D_TITLEALIGNMENT
     theme.TitleBackColor = options.TitleBackColor
-    theme.TitlePadding = options.TitlePadding or {Left = 2, Top = 2, Right = 2, Bottom = 2}
-    theme.BodyPadding = options.BodyPadding or {Left = 5, Top = 5, Right = 5, Bottom = 5}
-
+    theme.TitleMargin = options.TitleMargin or {Left = 0, Top = 0, Right = 0, Bottom = 0}
+    theme.BodyMargin = options.BodyMargin or {Left = 3, Top = 3, Right = 3, Bottom = 3}
+    theme.ContentMargin = options.ContentMargin or {Left = 3, Top = 3, Right = 3, Bottom = 3}
+    theme.ContentPadding = options.ContentPadding or {Left = 3, Top = 3, Right = 3, Bottom = 3}
+    theme.ContentAlignment = options.ContentAlignment or {X = swindow.Alignments.Start, swindow.Alignments.Center}
     if (options.BackColor ~= nil and type(options.BackColor) == 'string') then
         options.BackColor = ColourNameToRGB(options.BackColor)
     end
@@ -1050,8 +1094,6 @@ swindow.CreateTheme = function(options)
 
     theme.DefaultFont = options.Font or D_FONT
     theme.DefaultFontSize = options.FontSize or D_FONTSIZE
-
-    theme.ContentPadding = options.ContentPadding or {Left = 1, Top = 1, Right = 1, Bottom = 1}
 
     theme.TextStyles = {}
 

@@ -230,14 +230,16 @@ mywindow = simplewindow.CreateWindow(
 | --------------- | -------------------------------------------------------------------------------- | -------------- |
 | BackColor       | string or number for window background color                                     | Black          |
 | BorderColor     | string or number for window border color                                         | Teal           |
+| TitleBackColor  | Backcolor on title bar                                                           |
 | DefaultFont     | Font name to use when nothing has been set                                       | Lucida Console |
 | DefaultFontSize | Font size to use when nothing has been set                                       | 9              |
 | TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor                                  |
-| ContentPadding  | (Left,Top,Right,Bottom) padding between content                                  | 1,1,1,1        |
 | BorderWidth     | How wide of the border pen. Yes it should be in theme but.. not yet              |
-| BodyPadding     | (Left,Top,Right,Bottom) The content in the view is what distance from the border |
-| TitlePadding    | (Left,Top,Right,Bottom) The title what distance from the borders                 |
-| TitleBackColor  | Backcolor on title bar                                                           |
+| BodyMargin      | (Left,Top,Right,Bottom) The content in the view is what distance from the border |
+| TitleMargin     | (Left,Top,Right,Bottom)                                                          | 3,3,3,3        |
+| ContentMargin   | (Left,Top,Right,Bottom)                                                          | 3,3,3,3        |
+| ContentPadding  | (Left,Top,Right,Bottom) padding between content                                  | 3,3,3,3        |
+
 
 
 ##### Container Options
@@ -250,6 +252,7 @@ mywindow = simplewindow.CreateWindow(
 | TextStyle      | default textstyle for content                                |
 | Height         | force a height on the container (overflow hidden always atm) |
 | ContentPadding | (Left,Top,Right,Bottom) padding between content              | Theme.ContentPadding |
+| ContentMargin  | (Left,Top,Right,Bottom)                                      | Theme.ContentMargin  |
 
 *ContentPadding is really more of a ContentMargin atm*
 
