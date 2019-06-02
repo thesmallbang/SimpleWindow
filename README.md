@@ -3,6 +3,15 @@ A lua library for creating "responsive" windows in mushclient
 
 *This is still very experimental and I am still really working out I think it should work.*
 
+### Features Completed
+- Sizes ranges are customizable
+- *Container styles | complete: rowwrap, pending: column, row
+- Hide/Show content based on current size
+- Grow/Shrink content based on current size
+- Padding support (left,top,right,bottom)
+- Margin support (left,top,right,bottom)
+- TextStyles (similar functionality to a css class - only 1 per content atm)
+
 
 Sample Pics
 
@@ -50,7 +59,6 @@ Step 2: Add a view
             Sizes = {{Name = 'xs', Percent = '100'}}, -- on this container we want 100% width no matter how wide
             ContentSizes = {
                 {Name = 'xs', Percent = '100'},
-                {Name = 'sm', Percent = '100'},
                 {Name = 'md', Percent = '33.334'} -- anything medium and up we stick with 33% width
             },
             TextStyle = 'body'
