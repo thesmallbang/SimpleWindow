@@ -57,6 +57,14 @@ At the time of writing this the default size ranges (View.Sizes) were defined as
 ##### Usage
 ```lua
 statContainer.AddContent {
+           ContentSizes = {
+                {Name = 'xs', Percent = 100}, 
+                {Name = 'md', Percent = 50}, 
+                {Name = "xl", Percent = 0}
+            }
+        }
+-- or 
+statContainer.AddContent {
            Text = 'Stats',
            Sizes = {
                 {Name = 'xs', Percent = 100}, 
