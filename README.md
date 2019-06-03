@@ -13,7 +13,7 @@ A lua library for creating "responsive" windows in mushclient
 - Classes (similar functionality to a css class)
 
 
-Sample Pics
+Sample Pics (They look like a mess to show features and design is a true weakness of mine)
 
 ![sample1](sample1.png "Sample 1")
 ![sample2](sample2.png "Sample 2")
