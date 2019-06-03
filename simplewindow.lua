@@ -22,7 +22,7 @@ local D_UPDATEINTERVAL = 1
 local D_LEFT = 0
 local D_TOP = 0
 local D_TITLE = 'Simple Window by Tamon'
-local D_BORDERWIDTH = 1
+local D_BORDERWIDTH = 3
 local D_TITLEALIGNMENT = swindow.Alignments.Start
 local D_SAVESTATE = true
 local D_ALLOWRESIZE = true
@@ -32,21 +32,153 @@ local D_CONTAINERSTYLE = swindow.ContainerStyles.RowWrap
 local D_CONTAINERALIGNMENT_X = swindow.Alignments.Start
 local D_CONTAINERALIGNMENT_Y = swindow.Alignments.Center
 
-local D_CONTAINERSPACING = 3
+swindow.DefaultClasses = {}
 
-local function isModuleAvailable(name)
-    if package.loaded[name] then
-        return true
-    else
-        for _, searcher in ipairs(package.searchers or package.loaders) do
-            local loader = searcher(name)
-            if type(loader) == 'function' then
-                package.preload[name] = loader
-                return true
-            end
+function string:split(sep)
+    local sep, fields = sep or ':', {}
+    local pattern = string.format('([^%s]+)', sep)
+    self:gsub(
+        pattern,
+        function(c)
+            fields[#fields + 1] = c
         end
-        return false
-    end
+    )
+    return fields
+end
+function swindow.CreateDefaultClasses()
+    local classes = {}
+
+    -- blank name is a base we are applying first
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = '',
+            Font = D_FONT,
+            FontSize = D_FONTSIZE,
+            FontColor = D_FONTCOLOR,
+            Padding = 1,
+            Margin = 0,
+            Alignment = {X = D_CONTAINERALIGNMENT_X, Y = D_CONTAINERALIGNMENT_Y}
+        }
+    )
+
+    -- text decorators
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'bold',
+            Bold = true
+        }
+    )
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'underline',
+            Underline = true
+        }
+    )
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'strike',
+            Strikeout = true
+        }
+    )
+
+    -- some basic margins
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'm-sm',
+            Margin = 1
+        }
+    )
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'm-md',
+            Margin = 3
+        }
+    )
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'm-lg',
+            Margin = 5
+        }
+    )
+
+    -- some basic padding
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'p-sm',
+            Margin = 1
+        }
+    )
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'p-md',
+            Margin = 3
+        }
+    )
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'p-lg',
+            Margin = 5
+        }
+    )
+
+    -- basic colour scheme
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'primary',
+            FontColor = 'white'
+        }
+    )
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'primary-b',
+            BackColor = 'white'
+        }
+    )
+
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'secondary',
+            FontColor = 'teal'
+        }
+    )
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'secondary-b',
+            BackColor = 'teal'
+        }
+    )
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'warning',
+            FontColor = 'red'
+        }
+    )
+    table.insert(
+        classes,
+        swindow.CreateClass {
+            Name = 'warning-b',
+            BackColor = 'red'
+        }
+    )
+
+    -- some alignment
+
+    return classes
 end
 
 function SplitRGB(hx)
@@ -55,6 +187,9 @@ function SplitRGB(hx)
 end
 
 function ColorToRGBHex(color)
+    if (color == nil) then
+        color = 0
+    end
     low = math.floor(color / 65536)
     color = color - low * 65536
     mid = math.floor(color / 256) * 256
@@ -65,35 +200,30 @@ end
 
 function swindow.MergeRGB(rgb)
     local hexadecimal = '0X'
-
     for i = #rgb, 1, -1 do
         local value = rgb[i]
-
         local hex = ''
         while (value > 0) do
             local index = math.fmod(value, 16) + 1
             value = math.floor(value / 16)
             hex = string.sub('0123456789ABCDEF', index, index) .. hex
         end
-
         if (string.len(hex) == 0) then
             hex = '00'
         elseif (string.len(hex) == 1) then
             hex = '0' .. hex
         end
-
         hexadecimal = hexadecimal .. hex
     end
-
-    for key, value in pairs(rgb) do
-    end
-
     return tonumber(hexadecimal, 16)
 end
 
 function swindow.ColorAdjust(color, percent)
     if (type(color) == 'string') then
         color = ColourNameToRGB(color)
+    end
+    if (type(color) == 'table') then
+        color = swindow.MergeRGB(color)
     end
 
     local r, g, b = SplitRGB(ColorToRGBHex(color))
@@ -107,7 +237,7 @@ function swindow.ColorAdjust(color, percent)
     )
 end
 
-swindow.Paint = function(win)
+function swindow.Paint(win)
     if (win.__state.hasPaintBuffer == true) then
         -- https://github.com/fiendish/aardwolfclientpackage/wiki/Repaint-Buffer
         BroadcastPlugin(999, 'repaint')
@@ -116,7 +246,7 @@ swindow.Paint = function(win)
     end
 end
 
-swindow.CreateWindow = function(config, theme)
+function swindow.CreateWindow(config, theme)
     -- THE OPTIONS PASSED IN ON CONFIG MAY NOT RESPOND TO CHANGES AFTER CREATION
 
     local window = {
@@ -130,7 +260,7 @@ swindow.CreateWindow = function(config, theme)
             canMove = true,
             movingPositions = {X = 0, Y = 0},
             resizePositions = {X = 0, Y = 0},
-            fontsLoaded = false,
+            fontsLoaded = {},
             contentTop = 0,
             hasPaintBuffer = false
         }
@@ -156,45 +286,88 @@ swindow.CreateWindow = function(config, theme)
         table.insert(window.__state.views, view)
     end
 
-    function window.GetTextStyle(name)
-        local textStyle = nil
+    function window.GetTextWidth(styling, text)
+        return WindowTextWidth(window.Config.Id, styling.FontKey, text, false)
+    end
 
-        if (name ~= nil) then
-            for key, value in pairs(window.Theme.TextStyles) do
-                if (textStyle == nil and key == name) then
-                    textStyle = value
+    function window.GetFontKey(styling)
+        return (styling.Font or 'f') ..
+            '_' ..
+                (styling.FontSize or 'fs') ..
+                    '_' ..
+                        tostring((styling.Bold or 'false')) ..
+                            '_' ..
+                                tostring((styling.Italic or 'false')) ..
+                                    '_' ..
+                                        tostring((styling.Underline or 'false')) ..
+                                            '_' ..
+                                                tostring((styling.Strikeout or 'false')) ..
+                                                    '_' .. (styling.Charset or '') .. '_' .. (styling.FontFamily or '')
+    end
+
+    function window.GetMergedClass(classNames)
+        local result = {}
+
+        if (classNames == nil) then
+            print('no class names')
+            return result
+        end
+
+        if (type(classNames) == 'string') then
+            classNames = classNames:split(' ')
+        end
+
+        local loadeddefault = false
+        for _, name in ipairs(classNames) do
+            for _, c in pairs(window.Theme.Classes) do
+                if ((loadeddefault == false and c.Name == '') or string.lower(name) == string.lower(c.Name)) then
+                    if (c.Name == '') then
+                        loadeddefault = true
+                    end
+                    for i, s in pairs(c) do
+                        local handled = false
+                        if (s ~= nil) then
+                            if (handled == false) then
+                                result[i] = s or result[i]
+                            end
+                        end
+                    end
                 end
             end
         end
 
-        if (textStyle == nil) then
-            for key, value in pairs(window.Theme.TextStyles) do
-                if (textStyle == nil and value.Default == true) then
-                    textStyle = value
-                end
+        -- attach a font key here
+        result.FontKey = window.GetFontKey(result)
+
+        local found = false
+        for _, l in ipairs(window.__state.fontsLoaded) do
+            if (found == false and l == result.FontKey) then
+                found = true
             end
         end
-
-        if (textStyle == nil) then
-            textStyle = window.Theme.TextStyles[0]
+        if (found == false) then
+            local addresult =
+                WindowFont(
+                window.Config.Id,
+                result.FontKey,
+                result.Font,
+                result.FontSize,
+                result.Bold,
+                result.Italic,
+                result.Underline,
+                result.Strikeout,
+                result.Charset,
+                result.FontFamily
+            )
+            if (addresult == 0) then
+                table.insert(window.__state.fontsLoaded, result.FontKey)
+            end
         end
-
-        return textStyle
+        return result
     end
 
-    function window.GetTextWidth(textStyle, text)
-        if (type(textStyle) ~= 'string') then
-            textStyle = textStyle.Name
-        end
-
-        return WindowTextWidth(window.Config.Id, textStyle, text, false)
-    end
-
-    function window.GetTextHeight(textStyle)
-        if (type(textStyle) ~= 'string') then
-            textStyle = textStyle.Name
-        end
-        return WindowFontInfo(window.Config.Id, textStyle, 1)
+    function window.GetTextHeight(styling)
+        return WindowFontInfo(window.Config.Id, styling.FontKey, 1)
     end
 
     function window.Tick()
@@ -217,8 +390,8 @@ swindow.CreateWindow = function(config, theme)
         if (window.__state.views == nil or #window.__state.views == 0) then
             window.DrawText {
                 Text = 'No views are registered',
-                TextStyle = window.GetTextStyle(),
-                BackColor = 'red'
+                Bounds = {Left = 0, Top = 0, Right = 0, Bottom = 0},
+                Classes = {'warning'}
             }
             return
         end
@@ -226,8 +399,8 @@ swindow.CreateWindow = function(config, theme)
         if (view == nil) then
             window.DrawText {
                 Text = 'Invalid view state',
-                TextStyle = window.GetTextStyle(),
-                BackColor = 'red'
+                Bounds = {Left = 0, Top = 0, Right = 0, Bottom = 0},
+                Classes = {'warning'}
             }
             return
         end
@@ -242,9 +415,9 @@ swindow.CreateWindow = function(config, theme)
             options.Sizes or
             {
                 {Name = 'xs', From = 0},
-                {Name = 'sm', From = 100},
-                {Name = 'md', From = 200},
-                {Name = 'lg', From = 350},
+                {Name = 'sm', From = 150},
+                {Name = 'md', From = 250},
+                {Name = 'lg', From = 400},
                 {Name = 'xl', From = 500}
             }
 
@@ -302,11 +475,14 @@ swindow.CreateWindow = function(config, theme)
 
         view.DrawContainers = function()
             local cursor = {X = 0}
+
+            local bodyStyle = window.GetMergedClass(window.Theme.BodyClasses)
+
             local viewbounds = {
-                Left = theme.BorderWidth + theme.BodyMargin.Left,
-                Top = window.__state.contentTop + theme.BodyMargin.Top,
-                Right = (window.Config.Width - theme.BorderWidth) - theme.BodyMargin.Right,
-                Bottom = (window.Config.Height - theme.BorderWidth) - theme.BodyMargin.Bottom
+                Left = window.Theme.BorderWidth + bodyStyle.Margin.Left,
+                Top = window.__state.contentTop + bodyStyle.Margin.Top,
+                Right = (window.Config.Width - window.Theme.BorderWidth) - bodyStyle.Margin.Right,
+                Bottom = (window.Config.Height - window.Theme.BorderWidth) - bodyStyle.Margin.Bottom
             }
 
             local size = view.QuerySize()
@@ -425,9 +601,9 @@ swindow.CreateWindow = function(config, theme)
         end
 
         view.DrawContent = function(contentIndex, content, cursor, size, parentBounds, container)
-            local contentheight = content.Height or (window.GetTextHeight(content.TextStyle))
-            local margin = content.Margin or container.ContentMargin or theme.ContentMargin
-            local padding = (content.Padding or container.ContentPadding) or theme.ContentPadding
+            local styling = window.GetMergedClass(content.Classes)
+            local contentheight = content.Height or styling.Height or (window.GetTextHeight(styling))
+            local margin = content.Margin or styling.Margin
 
             local contentbounds = {
                 Left = parentBounds.Left + cursor.X,
@@ -435,7 +611,6 @@ swindow.CreateWindow = function(config, theme)
             }
 
             local contentwidth = view.GetContentWidth(content, size, (parentBounds.Right) - (parentBounds.Left))
-
             if (contentwidth == 0) then
                 contentbounds.Bottom = contentbounds.Top
                 contentbounds.Right = contentbounds.Left
@@ -443,7 +618,19 @@ swindow.CreateWindow = function(config, theme)
             end
 
             contentbounds.Right = (contentbounds.Left + contentwidth)
-            contentbounds.Bottom = contentbounds.Top + margin.Top + contentheight + margin.Bottom --+ padding.Top + padding.Bottom
+            contentbounds.Bottom = contentbounds.Top + margin.Top + contentheight + margin.Bottom
+
+            styling.Alignment = content.Alignment or styling.Alignment
+            styling.Padding = content.Padding or styling.Padding
+            styling.Margin = margin
+            styling.FontColor = content.FontColor or styling.FontColor
+            styling.BackColor = content.BackColor or styling.BackColor
+            styling.Font = content.Font or styling.Font
+            styling.FontSize = content.FontSize or styling.FontSize
+            styling.Charset = content.Charset or styling.Charset
+            styling.FontFamily = content.FontFamily or styling.FontFamily
+            -- update the font key to account for all the changes
+            styling.FontKey = window.GetFontKey(styling)
 
             -- for testing so i can see =)
             -- window.DrawText {
@@ -463,15 +650,11 @@ swindow.CreateWindow = function(config, theme)
             local drewBounds =
                 window.DrawText {
                 Text = content.Text,
-                Alignment = content.Alignment,
+                Styling = styling,
                 Bounds = textbounds,
                 Tooltip = content.Tooltip,
                 BackAttached = content.BackAttached,
-                Action = content.Action,
-                FontColor = content.FontColor,
-                BackColor = content.BackColor,
-                TextStyle = content.TextStyle,
-                Padding = content.Padding
+                Action = content.Action
             }
             contentbounds.Bottom = drewBounds.Bottom
 
@@ -497,24 +680,11 @@ swindow.CreateWindow = function(config, theme)
 
             container.Name = options.Name or 'Lorem ipsum'
             container.Style = options.Style or D_CONTAINERSTYLE
-            container.Height = options.Height
-            container.Alignment = options.Alignment or {X = D_CONTAINERALIGNMENT_X, Y = D_CONTAINERALIGNMENT_Y}
-            container.Spacing = options.Spacing or D_CONTAINERSPACING
-            container.Content = options.Content or {}
-            container.BackColor = options.BackColor
+            container.Classes = options.Classes
             container.ContentSizes = options.ContentSizes
-            container.ContentPadding = options.ContentPadding or theme.ContentPadding
-            container.ContentMargin = options.ContentMargin or theme.ContentMargin
-            container.ContentAlignment = options.ContentAlignment or theme.ContentAlignment
-            if (type(container.BackColor) == 'string') then
-                container.BackColor = ColourNameToRGB(container.BackColor)
-            end
-
-            container.TextStyle = options.TextStyle
-            if (container.TextStyle == nil or type(container.TextStyle) == 'string') then
-                container.TextStyle = window.GetTextStyle(container.TextStyle)
-            end
-
+            container.ContentClasses = options.ContentClasses or theme.ContentClasses
+            container.Height = options.Height
+            container.Content = options.Content or {}
             container.Sizes =
                 options.Sizes or
                 {
@@ -533,14 +703,16 @@ swindow.CreateWindow = function(config, theme)
                 content.Tooltip = options.Tooltip
                 content.Height = options.Height
                 content.Margin = options.Margin
-                content.Padding =
-                    options.Padding or container.ContentPadding or theme.ContentPadding or
-                    {Left = 0, Top = 0, Right = 0, Bottom = 0}
+                content.Padding = options.Padding
                 content.BackAttached = options.BackAttached
-                content.TextStyle = options.TextStyle or container.TextStyle
-                content.Alignment =
-                    options.Alignment or container.ContentAlignment or
-                    {X = D_CONTAINERALIGNMENT_X, Y = D_CONTAINERALIGNMENT_Y}
+
+                content.Classes = options.Classes or container.ContentClasses
+
+                content.Alignment = options.Alignment
+
+                if (type(options.Classes) == 'string') then
+                    options.Classes = options.Classes:split(' ')
+                end
 
                 content.Sizes =
                     options.Sizes or
@@ -548,14 +720,9 @@ swindow.CreateWindow = function(config, theme)
                         {
                             {Name = 'xs', Percent = 100}
                         })
-                content.GetSizePercent = function(name)
-                end
 
-                if (content.TextStyle == nil or type(content.TextStyle) == 'string') then
-                    content.TextStyle = window.GetTextStyle(content.TextStyle)
-                end
-                content.BackColor = options.BackColor or content.TextStyle.BackColor or window.Theme.BackColor
-                content.FontColor = options.FontColor or content.TextStyle.FontColor or window.Theme.FontColor
+                content.BackColor = options.BackColor
+                content.FontColor = options.FontColor
                 table.insert(container.Content, content)
                 return content
             end
@@ -579,9 +746,10 @@ swindow.CreateWindow = function(config, theme)
         if (lastConfig ~= nil and lastConfig.Id ~= drawConfig.Id) then
             -- we need to remove the last window id
             WindowDelete(lastConfig.Id)
-            window.__state.fontsLoaded = false
         end
 
+        local styling = window.GetMergedClass(window.Theme.TitleClasses)
+        local bodystyling = window.GetMergedClass(window.Theme.BodyClasses)
         -- create our window
         WindowCreate(
             drawConfig.Id,
@@ -591,27 +759,8 @@ swindow.CreateWindow = function(config, theme)
             drawConfig.Height,
             0,
             miniwin.create_absolute_location + miniwin.create_keep_hotspots,
-            window.Theme.BackColor
+            swindow.SantizeColor(styling.BackColor or 0)
         )
-
-        -- do we have fonts to load?
-        -- we could just look through the text styles here for a loaded flag to catch new ones but i'm not sure i want that atm
-        if (window.__state.fontsLoaded == false) then
-            for _, textStyle in pairs(window.Theme.TextStyles) do
-                WindowFont(
-                    drawConfig.Id,
-                    textStyle.Name,
-                    textStyle.Font,
-                    textStyle.FontSize,
-                    textStyle.Bold or false,
-                    textStyle.Italic or false,
-                    textStyle.Underline or false,
-                    textStyle.Strike or false,
-                    textStyle.Charset or 1,
-                    textStyle.Family or 0
-                )
-            end
-        end
 
         -- check previous configs for changes we can apply after the window was created
         if (lastConfig == nil or lastConfig.Visible ~= drawConfig.Visible) then
@@ -629,10 +778,10 @@ swindow.CreateWindow = function(config, theme)
             0,
             drawConfig.Width,
             drawConfig.Height,
-            theme.BorderColor,
+            swindow.SantizeColor(window.Theme.BorderColor),
             6,
-            theme.BorderWidth,
-            theme.BackColor
+            window.Theme.BorderWidth,
+            swindow.SantizeColor(bodystyling.BackColor)
         )
 
         -- draw our window title
@@ -640,46 +789,45 @@ swindow.CreateWindow = function(config, theme)
             local v = window.__state.views[0] or {}
             local vname = v.Name or ''
 
-            local tstyle = window.GetTextStyle('title')
+            local tstyle = window.GetMergedClass(window.Theme.TitleClasses)
             local title = string.gsub(drawConfig.Title, ' {viewname}', vname)
 
             local textHeight = window.GetTextHeight(tstyle)
             local titleBounds = {
-                Left = theme.BorderWidth,
-                Top = theme.BorderWidth,
-                Right = drawConfig.Width - theme.BorderWidth
+                Left = window.Theme.BorderWidth,
+                Top = window.Theme.BorderWidth,
+                Right = drawConfig.Width - window.Theme.BorderWidth
             }
 
             titleBounds.Bottom = titleBounds.Top + textHeight
 
             -- shade it darker
-            local colorBR = swindow.ColorAdjust(theme.BorderColor, -.3)
+            local colorBR = swindow.ColorAdjust(window.Theme.BorderColor, -.3)
 
             local textBounds = titleBounds
-            textBounds.Top = textBounds.Top + theme.TitleMargin.Top
-            textBounds.Left = textBounds.Left + theme.TitleMargin.Left
-            textBounds.Right = textBounds.Right - theme.TitleMargin.Right
-            textBounds.Bottom = textBounds.Bottom + theme.TitleMargin.Bottom
+            textBounds.Top = textBounds.Top + tstyle.Margin.Top
+            textBounds.Left = textBounds.Left + tstyle.Margin.Left
+            textBounds.Right = textBounds.Right - tstyle.Margin.Right
+            textBounds.Bottom = textBounds.Bottom + tstyle.Margin.Bottom
 
             local drawnPosition =
                 window.DrawText {
                 Text = title,
-                BackColor = theme.TitleBackColor,
+                Styling = tstyle,
                 Bounds = textBounds,
-                Alignment = {X = theme.TitleAlignment, Y = swindow.Alignments.Center},
                 TextStyle = tstyle
             }
 
             -- -- draw title line with darker shade
             WindowLine(
                 drawConfig.Id,
-                theme.BorderWidth + (theme.BorderWidth / 2),
-                titleBounds.Bottom + theme.TitleMargin.Bottom + (theme.BorderWidth / 2),
-                (drawConfig.Width - theme.BorderWidth) - (theme.BorderWidth / 2),
-                titleBounds.Bottom + theme.TitleMargin.Bottom + (theme.BorderWidth / 2),
+                window.Theme.BorderWidth + (window.Theme.BorderWidth / 2),
+                titleBounds.Bottom + tstyle.Margin.Bottom + (window.Theme.BorderWidth / 2),
+                (drawConfig.Width - window.Theme.BorderWidth) - (window.Theme.BorderWidth / 2),
+                titleBounds.Bottom + tstyle.Margin.Bottom + (window.Theme.BorderWidth / 2),
                 colorBR,
                 0x0100,
-                theme.BorderWidth
+                window.Theme.BorderWidth
             )
 
             _G['TitleMouseDown' .. window.Config.Id] = function(flags)
@@ -753,42 +901,42 @@ swindow.CreateWindow = function(config, theme)
                 -- draw our resizer
                 WindowLine(
                     drawConfig.Id,
-                    drawConfig.Width - (theme.BorderWidth),
-                    drawConfig.Height - (theme.BorderWidth) - 2,
-                    drawConfig.Width - (theme.BorderWidth) - 2,
-                    drawConfig.Height - (theme.BorderWidth),
-                    window.Theme.BorderColor,
+                    drawConfig.Width - (window.Theme.BorderWidth),
+                    drawConfig.Height - (window.Theme.BorderWidth) - 2,
+                    drawConfig.Width - (window.Theme.BorderWidth) - 2,
+                    drawConfig.Height - (window.Theme.BorderWidth),
+                    swindow.SantizeColor(window.Theme.BorderColor),
                     0 and 0x1000,
                     1
                 )
                 WindowLine(
                     drawConfig.Id,
-                    drawConfig.Width - (theme.BorderWidth),
-                    drawConfig.Height - (theme.BorderWidth) - 5,
-                    drawConfig.Width - (theme.BorderWidth) - 5,
-                    drawConfig.Height - (theme.BorderWidth),
-                    window.Theme.BorderColor,
+                    drawConfig.Width - (window.Theme.BorderWidth),
+                    drawConfig.Height - (window.Theme.BorderWidth) - 5,
+                    drawConfig.Width - (window.Theme.BorderWidth) - 5,
+                    drawConfig.Height - (window.Theme.BorderWidth),
+                    swindow.SantizeColor(window.Theme.BorderColor),
                     0 and 0x1000,
                     1
                 )
                 WindowLine(
                     drawConfig.Id,
-                    drawConfig.Width - (theme.BorderWidth),
-                    drawConfig.Height - (theme.BorderWidth) - 8,
-                    drawConfig.Width - (theme.BorderWidth) - 8,
-                    drawConfig.Height - (theme.BorderWidth),
-                    window.Theme.BorderColor,
+                    drawConfig.Width - (window.Theme.BorderWidth),
+                    drawConfig.Height - (window.Theme.BorderWidth) - 8,
+                    drawConfig.Width - (window.Theme.BorderWidth) - 8,
+                    drawConfig.Height - (window.Theme.BorderWidth),
+                    swindow.SantizeColor(window.Theme.BorderColor),
                     0 and 0x1000,
                     1
                 )
 
                 WindowLine(
                     drawConfig.Id,
-                    drawConfig.Width - (theme.BorderWidth),
-                    drawConfig.Height - (theme.BorderWidth) - 11,
-                    drawConfig.Width - (theme.BorderWidth) - 11,
-                    drawConfig.Height - (theme.BorderWidth),
-                    window.Theme.BorderColor,
+                    drawConfig.Width - (window.Theme.BorderWidth),
+                    drawConfig.Height - (window.Theme.BorderWidth) - 11,
+                    drawConfig.Width - (window.Theme.BorderWidth) - 11,
+                    drawConfig.Height - (window.Theme.BorderWidth),
+                    swindow.SantizeColor(window.Theme.BorderColor),
                     0 and 0x1000,
                     1
                 )
@@ -807,6 +955,8 @@ swindow.CreateWindow = function(config, theme)
                     window.Config.Height = posy
                     WindowResize(window.Config.Id, window.Config.Width, window.Config.Height, 35434)
                     -- draw border
+
+                    local styling = window.GetMergedClass(window.Theme.BodyClasses)
                     WindowCircleOp(
                         drawConfig.Id,
                         2,
@@ -814,28 +964,30 @@ swindow.CreateWindow = function(config, theme)
                         0,
                         drawConfig.Width,
                         drawConfig.Height,
-                        window.Theme.BorderColor,
+                        swindow.SantizeColor(styling.BackColor or 0),
                         0,
-                        theme.BorderWidth,
-                        ColourNameToRGB('gold'),
+                        window.Theme.BorderWidth,
+                        swindow.SantizeColor(styling.BackColor or 0),
                         6
                     )
 
                     local txt = 'X: ' .. window.Config.Width .. ' Y: ' .. window.Config.Height
-                    local textwidth = window.GetTextWidth(window.GetTextStyle(), txt)
+
+                    local textwidth = window.GetTextWidth(styling, txt)
+
+                    styling.Alignment = {
+                        X = swindow.Alignments.Center,
+                        Y = swindow.Alignments.Center
+                    }
 
                     window.DrawText {
                         Text = txt,
-                        TextStyle = 'title',
+                        Styling = styling,
                         Bounds = {
                             Left = 0,
                             Top = 0,
                             Right = window.Config.Width,
                             Bottom = window.Config.Height
-                        },
-                        Alignment = {
-                            X = swindow.Alignments.Center,
-                            Y = swindow.Alignments.Center
                         }
                     }
 
@@ -855,10 +1007,10 @@ swindow.CreateWindow = function(config, theme)
                 WindowAddHotspot(
                     drawConfig.Id,
                     'resizehs',
-                    drawConfig.Width - (theme.BorderWidth) - 12,
-                    drawConfig.Height - (theme.BorderWidth) - 12,
-                    drawConfig.Width - (theme.BorderWidth),
-                    drawConfig.Height - (theme.BorderWidth),
+                    drawConfig.Width - (window.Theme.BorderWidth) - 12,
+                    drawConfig.Height - (window.Theme.BorderWidth) - 12,
+                    drawConfig.Width - (window.Theme.BorderWidth),
+                    drawConfig.Height - (window.Theme.BorderWidth),
                     '',
                     '',
                     'ResizeMouseDown' .. window.Config.Id,
@@ -877,108 +1029,124 @@ swindow.CreateWindow = function(config, theme)
                 )
             end
 
-            window.__state.contentTop = titleBounds.Bottom + theme.TitleMargin.Bottom + (theme.BorderWidth)
-            window.__state.contentLeft = theme.BorderWidth
+            window.__state.contentTop = titleBounds.Bottom + tstyle.Margin.Bottom + (window.Theme.BorderWidth)
+            window.__state.contentLeft = window.Theme.BorderWidth
         end
     end
 
     function window.DrawText(options)
         --  id, txt, textStyle, pos, tooltip, action
         options = options or {}
-
         options.Id = options.Id or (options.Text:gsub('%s+', ''):gsub('%W', ''):sub(1, 10) .. math.random(1, 100000))
-        if (options.TextStyle == nil) then
-            options.TextStyle = window.GetTextStyle()
-            assert(options.TextStyle ~= nil, 'Attempted to draw text with no matching style or default')
+
+        assert(
+            options.Styling ~= nil or options.Classes ~= nil,
+            'Styling or Classes is required to draw text. Check your (theme|container|content).Classes configurations'
+        )
+
+        if (options.Styling == nil) then
+            options.Classes = options.Classes or theme.Classes
+            options.Styling = window.GetMergedClass(options.Classes)
         end
 
-        if (type(options.TextStyle) == 'string') then
-            options.TextStyle = window.GetTextStyle(options.TextStyle)
+        local styling = options.Styling
+
+        -- is this font loaded?
+        local found = false
+        for _, l in ipairs(window.__state.fontsLoaded) do
+            if (found == false and l == styling.FontKey) then
+                found = true
+            end
         end
-        if (type(options.FontColor) == 'string') then
-            options.FontColor = ColourNameToRGB(options.FontColor)
+        if (found == false) then
+            WindowFont(
+                window.Config.Id,
+                styling.FontKey,
+                styling.Font,
+                styling.FontSize,
+                styling.Bold,
+                styling.Italic,
+                styling.Underline,
+                styling.Strikeout,
+                styling.Charset,
+                styling.FontFamily
+            )
+            table.insert(window.__state.fontsLoaded, styling.FontKey)
         end
-        options.Alignment = options.Alignment or {X = swindow.Alignments.Start, Y = swindow.Alignments.Start}
+
         options.Bounds = options.Bounds
-        options.Padding = options.Padding or {Left = 0, Top = 0, Right = 0, Bottom = 0}
 
         -- so the bounds = a border really ... it needs to be expanded to accomidate padding
         options.Bounds.Left = (options.Bounds.Left or window.__state.contentLeft)
         options.Bounds.Top = options.Bounds.Top or window.__state.contentTop
         options.Bounds.Right = (options.Bounds.Right or window.Config.Width)
         options.Bounds.Bottom =
-            (options.Bounds.Bottom or window.Config.Height) + options.Padding.Bottom + options.Padding.Top
+            (options.Bounds.Bottom or window.Config.Height) + styling.Padding.Bottom + styling.Padding.Top
 
         if (options.BackAttached == nil) then
             options.BackAttached = false
         end
+
         options.Text = options.Text or 'Omnium rerum principia parva sunt'
-        local textWidth = window.GetTextWidth(options.TextStyle, options.Text)
-        local textHeight = window.GetTextHeight(options.TextStyle)
+
+        local textWidth = window.GetTextWidth(styling, options.Text)
+        local textHeight = window.GetTextHeight(styling)
 
         -- by default everything is setup for start/start alignments so we just need to tweak positions for the rest
         local left = options.Bounds.Left
         local top = options.Bounds.Top
 
-        if (options.Alignment.X == swindow.Alignments.Start) then
-            left = options.Bounds.Left + options.Padding.Left
+        if (styling.Alignment.X == swindow.Alignments.Start) then
+            left = options.Bounds.Left + styling.Padding.Left
         end
-        if (options.Alignment.X == swindow.Alignments.Center) then
+        if (styling.Alignment.X == swindow.Alignments.Center) then
             left = options.Bounds.Left + (((options.Bounds.Right - options.Bounds.Left) / 2) - (textWidth / 2))
         end
-        if (options.Alignment.X == swindow.Alignments.End) then
-            left = (options.Bounds.Right - textWidth) - options.Padding.Right
+        if (styling.Alignment.X == swindow.Alignments.End) then
+            left = (options.Bounds.Right - textWidth) - styling.Padding.Right
         end
 
-        if (options.Alignment.Y == swindow.Alignments.Start) then
-            top = options.Bounds.Top + options.Padding.Top
+        if (styling.Alignment.Y == swindow.Alignments.Start) then
+            top = options.Bounds.Top + styling.Padding.Top
         end
 
-        if (options.Alignment.Y == swindow.Alignments.Center) then
+        if (styling.Alignment.Y == swindow.Alignments.Center) then
             top =
                 (((options.Bounds.Bottom - options.Bounds.Top) / 2) - (textHeight / 2)) -
-                ((options.Padding.Top + options.Padding.Bottom) / 2)
+                ((styling.Padding.Top + styling.Padding.Bottom) / 2)
         end
-        if (options.Alignment.Y == swindow.Alignments.End) then
-            top = (options.Bounds.Bottom - textHeight) - options.Padding.Bottom
+        if (styling.Alignment.Y == swindow.Alignments.End) then
+            top = (options.Bounds.Bottom - textHeight) - styling.Padding.Bottom
         end
 
         -- centering can attempt to force this left .. we will force it back to align left basically
         if (left < options.Bounds.Left) then
-            left = options.Bounds.Left + options.Padding.Left
+            left = options.Bounds.Left + styling.Padding.Left
         end
 
         -- again centering a huge font could mess u up here..we just align top
         if (top < options.Bounds.Top) then
-            top = options.Bounds.Top + options.Padding.Top
+            top = options.Bounds.Top + styling.Padding.Top
         end
 
-        local right = options.Bounds.Right - options.Padding.Right
-        local bottom = (top + textHeight) + options.Padding.Bottom
+        local right = options.Bounds.Right - styling.Padding.Right
+        local bottom = (top + textHeight) + styling.Padding.Bottom
 
         if (right > options.Bounds.Right) then
             right = options.Bounds.Right
         end
 
-        if (options.Bounds.Bottom > (window.Config.Height - theme.BorderWidth) - options.Padding.Bottom) then
-            options.Bounds.Bottom = (window.Config.Height - theme.BorderWidth) - options.Padding.Bottom
+        if (options.Bounds.Bottom > (window.Config.Height - window.Theme.BorderWidth) - styling.Padding.Bottom) then
+            options.Bounds.Bottom = (window.Config.Height - window.Theme.BorderWidth) - styling.Padding.Bottom
         end
 
         if (bottom > options.Bounds.Bottom) then
             bottom = options.Bounds.Bottom
         end
 
-        -- print(json.encode(options.Bounds))
-        -- print(json.encode({bottom, left, right, top}))
-        -- print('----')
-
         -- in order to support background colors we need to just draw a rect behind the text
-        if (options.BackColor ~= nil or options.TextStyle.BackColor ~= nil) then
-            local backcolor = options.BackColor or options.TextStyle.BackColor
-            if (type(backcolor) == 'string') then
-                backcolor = ColourNameToRGB(backcolor)
-            end
-
+        if (styling.BackColor ~= nil) then
+            local backcolor = swindow.SantizeColor(styling.BackColor)
             if (options.BackAttached == true) then
                 WindowCircleOp(window.Config.Id, 2, left, top, right, bottom, backcolor, 0, 0, backcolor)
             else
@@ -1000,13 +1168,13 @@ swindow.CreateWindow = function(config, theme)
         -- put our text down
         WindowText(
             window.Config.Id,
-            options.TextStyle.Name,
+            styling.FontKey,
             options.Text or 'Omnium enim rerum principia parva sunt',
             left,
             top,
             right,
             bottom,
-            options.FontColor or options.TextStyle.Color
+            swindow.SantizeColor(styling.FontColor)
         )
 
         -- add a hotspot if we have an action or tooltip
@@ -1072,66 +1240,97 @@ swindow.CreateWindow = function(config, theme)
     return window
 end
 
-swindow.CreateTheme = function(options)
+function swindow.CreateClass(options)
+    assert(options.Name, 'Name is required to create a class')
+    local cls = {}
+    cls.Name = options.Name
+    cls.Font = options.Font
+    cls.FontFamily = options.FontFamily
+    cls.FontSize = options.FontSize
+    cls.Bold = options.Bold
+    cls.Italic = options.Italic
+    cls.Underline = options.Underline
+    cls.Height = options.Height
+    cls.BackColor = options.BackColor
+    cls.FontColor = options.FontColor
+    cls.Strikeout = options.Strikeout
+    cls.Alignment = options.Alignment
+    cls.Padding = options.Padding
+    cls.Margin = options.Margin
+
+    if (type(cls.Padding) == 'number') then
+        cls.Padding = {Left = cls.Padding, Top = cls.Padding, Right = cls.Padding, Bottom = cls.Padding}
+    end
+    if (type(cls.Margin) == 'number') then
+        cls.Margin = {Left = cls.Margin, Top = cls.Margin, Right = cls.Margin, Bottom = cls.Margin}
+    end
+    if (type(cls.Alignment) == 'number') then
+        cls.Alignment = {X = cls.Alignment, Y = cls.Alignment}
+    end
+
+    return cls
+end
+
+function swindow.CreateTheme(options)
     local theme = {}
     options = options or {}
-
     theme.BorderWidth = options.BorderWidth or D_BORDERWIDTH
-    theme.TitleAlignment = options.TitleAlignment or D_TITLEALIGNMENT
-    theme.TitleBackColor = options.TitleBackColor
-    theme.TitleMargin = options.TitleMargin or {Left = 0, Top = 0, Right = 0, Bottom = 0}
-    theme.BodyMargin = options.BodyMargin or {Left = 3, Top = 3, Right = 3, Bottom = 3}
-    theme.ContentMargin = options.ContentMargin or {Left = 3, Top = 3, Right = 3, Bottom = 3}
-    theme.ContentPadding = options.ContentPadding or {Left = 3, Top = 3, Right = 3, Bottom = 3}
-    theme.ContentAlignment = options.ContentAlignment or {X = swindow.Alignments.Start, swindow.Alignments.Center}
-    if (options.BackColor ~= nil and type(options.BackColor) == 'string') then
-        options.BackColor = ColourNameToRGB(options.BackColor)
-    end
+    theme.BorderColor = options.BorderColor or D_BORDERCOLOR
+
+    theme.TitleClasses = options.TitleClasses or {''}
+    theme.BodyClasses = options.BodyClasses or {''}
+    theme.ContentClasses = options.ContentClasses or {''}
+    theme.Classes = swindow.CreateDefaultClasses() -- add our default classes
 
     if (options.BorderColor ~= nil and type(options.BorderColor) == 'string') then
         options.BorderColor = ColourNameToRGB(options.BorderColor)
     end
 
-    theme.BackColor = options.BackColor or ColourNameToRGB('black')
-    theme.BorderColor = options.BorderColor or ColourNameToRGB('teal')
-
-    theme.DefaultFont = options.DefaultFont or D_FONT
-    theme.DefaultFontSize = options.DefaultFontSize or D_FONTSIZE
-
-    theme.TextStyles = {}
-
-    function theme.AddTextStyle(textStyle)
-        if (theme.TextStyles == nil) then
-            theme.TextStyles = {}
-        end
-
-        -- just to make sure all our values are correctly set we are going to run this through a create text style and pickup anything missing
-        textStyle =
-            swindow.CreateTextStyle(
-            textStyle.Name,
-            textStyle.Color,
-            textStyle.Default,
-            textStyle.FontSize or theme.DefaultFontSize,
-            textStyle.Font or theme.DefaultFont,
-            textStyle.BackColor
-        )
-
-        theme.TextStyles[textStyle.Name] = textStyle
+    function theme.AddClass(cls)
+        theme.Classes[cls.Name] = cls
     end
 
-    if (options.TextStyles == nil) then
-        theme.AddTextStyle(swindow.CreateTextStyle('text', 'white', true))
+    if (options.Classes == nil) then
+        swindow.CreateClass {
+            Name = '',
+            Font = D_FONT,
+            FontColor = D_FONTCOLOR,
+            FontSize = D_FONTSIZE,
+            BackColor = D_BACKCOLOR,
+            Margin = 0,
+            Padding = 0,
+            Alignment = {X = D_CONTAINERALIGNMENT_X, Y = D_CONTAINERALIGNMENT_Y}
+        }
     else
-        -- again we want to run passed in styles through some validation/correction
-        for _, ts in ipairs(options.TextStyles) do
-            theme.AddTextStyle(ts)
+        for _, c in pairs(options.Classes) do
+            theme.AddClass(c)
         end
     end
 
     return theme
 end
 
-swindow.CreateConfig = function(options)
+function swindow.SantizeColor(color)
+    local t = type(color)
+    if (t == 'string') then
+        if (color.sub(1, 1) == '#') then
+            local hx = tostring(hx):gsub('#', '')
+            return tonumber('0x' .. hx:sub(1, 2) .. hx:sub(3, 4)) .. hx:sub(5, 6)
+        else
+            return ColourNameToRGB(color)
+        end
+    end
+    if (t == 'table') then
+        return swindow.MergeRGB(color)
+    end
+    if (t == 'number') then
+        return color
+    end
+
+    return D_BACKCOLOR
+end
+
+function swindow.CreateConfig(options)
     local config = {}
     if (options == nil) then
         options = {}
@@ -1157,23 +1356,6 @@ swindow.CreateConfig = function(options)
     config.SaveState = options.SaveState or D_SAVESTATE
 
     return config
-end
-
-swindow.CreateTextStyle = function(name, color, isDefault, fontSize, font, backcolor)
-    assert(name, 'Name is required to create a text style')
-    if (color ~= nil and type(color) == 'string') then
-        color = ColourNameToRGB(color)
-    end
-
-    return {
-        -- leaving some values nil so theme defaults can be used later
-        Name = name,
-        Color = color or D_FONTCOLOR,
-        BackColor = backcolor,
-        Font = font,
-        FontSize = fontSize,
-        Default = isDefault or false
-    }
 end
 
 return swindow

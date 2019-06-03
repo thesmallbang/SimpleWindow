@@ -10,7 +10,7 @@ A lua library for creating "responsive" windows in mushclient
 - Grow/Shrink content based on current size
 - Padding support (left,top,right,bottom)
 - Margin support (left,top,right,bottom)
-- TextStyles (similar functionality to a css class - only 1 per content atm)
+- Classes (similar functionality to a css class)
 
 
 Sample Pics
@@ -24,197 +24,110 @@ Resizing
 ![resize](resizesample.png "Resizing")
 
 ####
-##### Creating the window in the pictures above
+##### To try it out you can use the SimpleWindowSample.xml plugin.
+*It requires the simplewindow.lua to be in your mushclient/lua folder*
 
-Step 1: Somewhere before you want your window to first appear
+#
+##### Views
+    No ui implemented right now
+Essentially the views are just tabs with a different ui for selecting them. The title bar will be right clickable and the user can switch between them via context menu
+
+#
+
+### Sizes
+Responsive behaviour is managed via ranges of sizes.
+
+
+##### Definitions
+The sizes are attached to the view instead of the window to allow different layouts
+    
+At the time of writing this the default size ranges (View.Sizes) were defined as:
 ```lua
-local simplewindow = require('simplewindow')
+{
+    {Name = 'xs', From = 0},
+    {Name = 'sm', From = 150},
+    {Name = 'md', From = 250},
+    {Name = 'lg', From = 400},
+    {Name = 'xl', From = 500}
+}
+-- So if the window width is set (by user or code) to 50 it would match the xs
+-- 150-249 match sm and so on. 
+```
 
-mywindow = simplewindow.CreateWindow()
+##### Usage
+```lua
+statContainer.AddContent {
+           Text = 'Stats',
+           Sizes = {
+                {Name = 'xs', Percent = 100}, 
+                {Name = 'md', Percent = 50}, 
+                {Name = "xl", Percent = 0}
+            }
+        }
+```
+In the scenario above we are saying the content will be 100% of the available width when the window size is currently matched to xs. When the window size reaches sm it will continue to use the xs setting. After reaching md the content will now only use up 50% of the available width allowing for up to 2 of them on the single row (if using rowwrap style). After the window size reaches xl we are just going to completely hide the content.
+
+    
+#
+### Classes
+
+Classes are the quasi-implementation of css classes we have. They can be mixed and matched and have quite a few properties already implemented with more coming soon.
+
+For all the properties scroll further down to the Class Options
+
+##### Usage
+```lua
+-- you can apply content classes to an entire container
+statContainer.AddContainer {
+           ContentClasses = 'name1 name2 name3'
+        }
+
+-- or to the content itself which will override anything on the container
+-- also if you use spaces in your class names you will want to add them as a table
+statContainer.AddContent {
+           Text = 'Stats',
+           Classes = {'spaced name', 'spaced name2','spaced name3'}
+        }
+```
+
+##### Builtin Classes
+| Class       | Description                                                                      |
+| ----------- | -------------------------------------------------------------------------------- |
+|             | This blank class is used to supply at least the minimum required items as a base |
+| m-sm        | Add a small margin (all sides)                                                   |
+| m-md        | Add a medium margin   (all sides)                                                |
+| m-lg        | Add a large margin    (all sides)                                                |
+| p-sm        | Add a small padding   (all sides)                                                |
+| p-md        | Add a medium padding  (all sides)                                                |
+| p-lg        | Add a large padding   (all sides)                                                |
+| underline   | Underline the text                                                               |
+| bold        | Bolden the text                                                                  |
+| strike      | strikeout the text                                                               |
+| primary     | a primary fontcolor theming (white default)                                      |
+| primary-b   | primary color applied to backcolor                                               |
+| secondary   | a secondary fontcolor for theming (teal default)                                 |
+| secondary-b | secondary color applied to backcolor                                             |
+| warning     | sample theming for warning type items (red default)                              |
+| warning-b   | warning color applied to backcolor                                               |
+
+
+
+
+#
+### Colors
+
+Color properties can be set as a name, decimal, html hex, or rgb table.
+
+```lua
+BackColor = 'red'
+BackColor = '#FF0000'
+BackColor = {255,0,0}
+
 ```
 
 
-Step 2: Add a view
-```lua
-  local view =
-        mywindow.CreateView {
-        Name = 'Main'
-    }
 
-  -- You can add/edit any amount of ranges like this
-  --   view.Sizes =  {
-  --              {Name = 'xs', From = 0},
-  --              {Name = 'sm', From = 250},
-  --              {Name = 'md', From = 400},
-  --              {Name = 'lg', From = 600},
-  --              {Name = 'xl', From = 800}
-  --         }
-
-    -- OnUpdate will be called after the UpdateInterval has passed or a refresh is being forced
-      view.OnUpdate = function(v)
-        -- we need a container to put our content in
-        local mycontainer =
-            v.AddContainer {
-            Style = simplewindow.ContainerStyles.RowWrap,
-            Sizes = {{Name = 'xs', Percent = '100'}}, -- on this container we want 100% width no matter how wide
-            ContentSizes = {
-                {Name = 'xs', Percent = '100'},
-                {Name = 'md', Percent = '33.334'} -- anything medium and up we stick with 33% width
-            },
-            TextStyle = 'body'
-            -- for more on text styles see the configuration section.
-        }
-
-        mycontainer.AddContent {
-            Text = 'Hola',
-            BackColor = 'tan',
-            TextStyle = 'title',
-            Tooltip = 'Click me',
-            -- BackAttached = true, -- the back color will only appear under the text and not the entire bounds
-            Action = function(options) -- options is all the options that were used to draw the text that were used creating the "link".
-            -- mostly everything in the conent but a few other things like the location on the window it was drew at etc
-                print('user clicked ' .. options.Text)
-            end
-        }
-        mycontainer.AddContent {
-            Text = 'Hello',
-            BackColor = 'red',
-            FontColor = 'black',
-            Tooltip = 'Hello'
-        }
-        mycontainer.AddContent {
-            Text = 'Aloha',
-            BackColor = 23422
-        }
-
-        -- add a spacer
-        mycontainer.AddContent {
-            Text = '',
-            Sizes = {{Name = 'xs', Percent = 100}}
-        }
-
-        local mySecondContainer =
-            v.AddContainer {
-            Sizes = {{Name = 'xs', Percent = 0}, {Name = 'sm', Percent = 0}, {Name = 'md', Percent = 30}},
-            -- hide container it when smaller than medium
-            -- right now 0 percent does not save any draw call performance and is just purely math ... todo
-            ContentSizes = {{Name = 'xs', Percent = 50}}
-            -- even though xs and sm aren't showing we still just want it at 50% when it is eventually visible
-        }
-
-        mySecondContainer.AddContent {
-            Text = 'Stats',
-            BackColor = 'green',
-            Sizes = {{Name = 'xs', Percent = 100}}
-        }
-
-        mySecondContainer.AddContent {
-            Text = 'Level'
-        }
-        mySecondContainer.AddContent {
-            Text = '1'
-        }
-
-        mySecondContainer.AddContent {
-            Text = 'Str'
-        }
-        mySecondContainer.AddContent {
-            Text = '150'
-        }
-
-        mySecondContainer.AddContent {
-            Text = 'Health'
-        }
-
-        mySecondContainer.AddContent {
-            Text = '15000/15000'
-        }
-
-        mySecondContainer.AddContent {
-            Text = 'Mana'
-        }
-        mySecondContainer.AddContent {
-            Text = '15000/15000'
-        }
-
-        local mythirdContainer =
-            v.AddContainer {
-            Sizes = {{Name = 'xs', Percent = 100}, {Name = 'sm', Percent = 100}, {Name = 'md', Percent = 70}},
-            ContentSizes = {{Name = 'xs', Percent = 100}, {Name = 'sm', Percent = 100}, {Name = 'md', Percent = 50}}
-        }
-
-        mythirdContainer.AddContent {}
-        mythirdContainer.AddContent {
-            BackColor = math.random(ColourNameToRGB('white'), ColourNameToRGB('black'))
-        }
-        mythirdContainer.AddContent {
-            BackColor = math.random(ColourNameToRGB('white'), ColourNameToRGB('black'))
-        }
-        mythirdContainer.AddContent {
-            BackColor = math.random(ColourNameToRGB('white'), ColourNameToRGB('black'))
-        }
-        mythirdContainer.AddContent {
-            BackColor = math.random(ColourNameToRGB('white'), ColourNameToRGB('black'))
-        }
-        mythirdContainer.AddContent {}
-
-        local myFourthContainer =
-            v.AddContainer {
-            Sizes = {{Name = 'xs', Percent = 100}}
-        }
-
-        myFourthContainer.AddContent {Text = ''} --spacer line since no real spacing/margin/padding support atm
-
-        myFourthContainer.AddContent {
-            Text = 'The larger end.',
-            Sizes = {{Name = 'xs', Percent = 0}, {Name = 'sm', Percent = 0}, {Name = 'md', Percent = 100}},
-            Alignment = {X = simplewindow.Alignments.Center},
-            BackColor = 'orange'
-        }
-
-        myFourthContainer.AddContent {
-            Text = 'The smaller end.',
-            Sizes = {{Name = 'xs', Percent = 100}, {Name = 'sm', Percent = 100}, {Name = 'md', Percent = 0}},
-            Alignment = {X = simplewindow.Alignments.Center},
-            BackColor = 'purple'
-        }
-    end
-
-
-
-    mywindow.RegisterView(view)
-```
-
-
-Step 3: Enable updating the window
-```lua
-function OnPluginTick ()
-    if (mywindow) then
-        mywindow.Tick()
-    end
-end
-```
-
-
-##### Configuration and Theming
-
-```lua
-
-mywindow = simplewindow.CreateWindow(
-    simplewindow.CreateConfig {
-        Id = 'hellowindow',
-        Title = 'Hello Window {viewname}'
-    },
-     simplewindow.CreateTheme {
-        TextStyles = {
-        -- function(name, color, isDefault, fontSize, font, backcolor)
-        simplewindow.CreateTextStyle('title', 'teal', false, 10),
-        simplewindow.CreateTextStyle('header', 'teal'),
-        simplewindow.CreateTextStyle('body', 'white', true)
-    })
-```
-
-
+###
 ##### Configuration Options
 | Param Name     | Description                                                         | DefaultValue |
 | -------------- | ------------------------------------------------------------------- | ------------ |
@@ -222,7 +135,6 @@ mywindow = simplewindow.CreateWindow(
 | UpdateInterval | How often should the callback for refreshing data and drawing occur | 1 (second)   |
 | Layer          | The higher the layer the more likely to draw ontop of other windows | 100          |
 | Title          | Text to display at the top of your window.                          |
-| TitleAlignment | simplewindow.Alignments.(Start,Center,End)  (refers to x align atm) | Start        |
 | Width          | The default width of the window                                     | 300          |
 | Height         | The default height of the window                                    | 300          |
 | Left           | The distance from the left side of the screen                       |
@@ -232,37 +144,52 @@ mywindow = simplewindow.CreateWindow(
 
 
 
-
+###
 ##### Theme Options
-| Param Name      | Description                                                                      | DefaultValue   |
-| --------------- | -------------------------------------------------------------------------------- | -------------- |
-| BackColor       | string or number for window background color                                     | Black          |
-| BorderColor     | string or number for window border color                                         | Teal           |
-| TitleBackColor  | Backcolor on title bar                                                           |
-| DefaultFont     | Font name to use when nothing has been set                                       | Lucida Console |
-| DefaultFontSize | Font size to use when nothing has been set                                       | 9              |
-| TextStyles[]    | Name, Color, Default, FontSize, Font, BackColor                                  |
-| BorderWidth     | How wide of the border pen. Yes it should be in theme but.. not yet              |
-| BodyMargin      | (Left,Top,Right,Bottom) The content in the view is what distance from the border |
-| TitleMargin     | (Left,Top,Right,Bottom)                                                          | 3,3,3,3        |
-| ContentMargin   | (Left,Top,Right,Bottom)                                                          | 3,3,3,3        |
-| ContentPadding  | (Left,Top,Right,Bottom) padding between content                                  | 3,3,3,3        |
+| Param Name      | Description                                                                            | DefaultValue   |
+| --------------- | -------------------------------------------------------------------------------------- | -------------- |
+| DefaultFont     | Font name to use when nothing has been set                                             | Lucida Console |
+| DefaultFontSize | Font size to use when nothing has been set                                             | 9              |
+| BorderWidth     | How wide is the border on the window                                                   | 3              |
+| BorderColor     | Color of window border                                                                 |                |
+| TitleClasses    | Names of the classes to apply to the title bar                                         | {'title'}      |
+| BodyClasses     | Names of classes to apply to the body. Really just useful for a margin at the moment   | {'body'}       |
+| ContentClasses  | Names of the classes to apply by default when nothing is assigned                      | {''}           |
+| Classes         | All class definitions. There are some built in definitions that can be used/overriden. |                |
 
+###
+##### Class Options
+| Param Name | Description                  | DefaultValue |
+| ---------- | ---------------------------- | ------------ |
+| Name       | Main reference for the class | *required    |
+| Font       | Font name                    |
+| FontFamily |
+| FontSize   |
+| Bold       |
+| Italic     |
+| Underline  |
+| Strikeout  |
+| Height     | Force a height               |
+| BackColor  |
+| FontColor  |
+| Alignment  |
+| Padding    |
+| Margin     |
 
+*Right now padding and margin will NOT merge partial settings and you must supply left,top,right,bottom and not just a single one.*
 
+###
 ##### Container Options
-| Param Name     | Description                                                  | DefaultValue         |
-| -------------- | ------------------------------------------------------------ | -------------------- |
+| Param Name     | Description                                                  | DefaultValue |
+| -------------- | ------------------------------------------------------------ | ------------ |
 | Name           | a name for the container pretty useless atm except logging   |
-| Style          | simplewindow.ContainerStyles. (Column, Row, RowWrap)         | RowWrap              |
+| Style          | simplewindow.ContainerStyles. (Column, Row, RowWrap)         | RowWrap      |
 | Sizes          | specify the sizes for the container at specific width states |
 | ContentSizes   | default size for content at specific width states            |
-| TextStyle      | default textstyle for content                                |
-| Height         | force a height on the container (overflow hidden always atm) |
-| ContentPadding | (Left,Top,Right,Bottom) padding between content              | Theme.ContentPadding |
-| ContentMargin  | (Left,Top,Right,Bottom)                                      | Theme.ContentMargin  |
+| ContentClasses | default classes for content in container                     |
 
-*ContentPadding is really more of a ContentMargin atm*
+| Height       | force a height on the container (overflow hidden always atm) |
+
 
 ##### Content Options
 | Param Name      | Description                                                                                                                                                            | DefaultValue             |
@@ -270,7 +197,7 @@ mywindow = simplewindow.CreateWindow(
 | Id              | unique id for the content, used in callbacks from links etc                                                                                                            | Random                   |
 | Text            | What text is in the content                                                                                                                                            |
 | Alignment.(X,Y) | simplewindow.Alignments.(Start,Center,End)                                                                                                                             | Start, Center            |
-| TextStyle       |                                                                                                                                                                        |
+| Classes         |                                                                                                                                                                        |
 | Sizes           |                                                                                                                                                                        |
 | BackColor       |                                                                                                                                                                        |
 | FontColor       |                                                                                                                                                                        |
