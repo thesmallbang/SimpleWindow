@@ -28,7 +28,7 @@ Resizing
 *It requires the simplewindow.lua to be in your mushclient/lua folder*
 
 #
-##### Views
+### Views
     No ui implemented right now
 Essentially the views are just tabs with a different ui for selecting them. The title bar will be right clickable and the user can switch between them via context menu
 
@@ -73,7 +73,7 @@ In the scenario above we are saying the content will be 100% of the available wi
 
 Classes are the quasi-implementation of css classes we have. They can be mixed and matched and have quite a few properties already implemented with more coming soon.
 
-For all the properties scroll further down to the Class Options
+    For all the properties scroll further down to the Class Options
 
 ##### Usage
 ```lua
@@ -187,7 +187,6 @@ BackColor = {255,0,0}
 | Sizes          | specify the sizes for the container at specific width states |
 | ContentSizes   | default size for content at specific width states            |
 | ContentClasses | default classes for content in container                     |
-
 | Height       | force a height on the container (overflow hidden always atm) |
 
 
